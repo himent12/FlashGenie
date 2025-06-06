@@ -165,7 +165,103 @@ class Deck:
         """Sort flashcards by next review date (due cards first)."""
         self.flashcards.sort(key=lambda card: card.next_review)
         self.modified_at = datetime.now()
-    
+
+    def auto_tag_cards(self, tag_manager=None) -> int:
+        """
+        Automatically tag cards based on content analysis.
+
+        Args:
+            tag_manager: TagManager instance for auto-tagging
+
+        Returns:
+            Number of cards that received new tags
+        """
+        if tag_manager is None:
+            from flashgenie.core.tag_manager import TagManager
+            tag_manager = TagManager()
+
+        tagged_count = 0
+        for card in self.flashcards:
+            suggested_tags = tag_manager.auto_categorize(card)
+            if suggested_tags:
+                # Add new tags that aren't already present
+                new_tags = [tag for tag in suggested_tags if tag not in card.tags]
+                if new_tags:
+                    card.tags.extend(new_tags)
+                    tagged_count += 1
+
+        if tagged_count > 0:
+            self.modified_at = datetime.now()
+
+        return tagged_count
+
+    def get_cards_by_smart_collection(self, collection_name: str,
+                                    collection_manager=None) -> List[Flashcard]:
+        """
+        Get cards using a smart collection.
+
+        Args:
+            collection_name: Name of the smart collection
+            collection_manager: SmartCollectionManager instance
+
+        Returns:
+            List of cards matching the collection criteria
+        """
+        if collection_manager is None:
+            from flashgenie.core.smart_collections import SmartCollectionManager
+            collection_manager = SmartCollectionManager()
+
+        collection = collection_manager.get_collection(collection_name)
+        if collection:
+            return collection.get_cards(self)
+        return []
+
+    def get_difficulty_distribution(self) -> Dict[str, int]:
+        """Get distribution of cards by difficulty level."""
+        distribution = {"easy": 0, "medium": 0, "hard": 0}
+
+        for card in self.flashcards:
+            if card.difficulty < 0.33:
+                distribution["easy"] += 1
+            elif card.difficulty < 0.67:
+                distribution["medium"] += 1
+            else:
+                distribution["hard"] += 1
+
+        return distribution
+
+    def get_performance_summary(self) -> Dict[str, Any]:
+        """Get comprehensive performance summary for the deck."""
+        if not self.flashcards:
+            return {}
+
+        reviewed_cards = [card for card in self.flashcards if card.review_count > 0]
+
+        if not reviewed_cards:
+            return {
+                "total_cards": len(self.flashcards),
+                "reviewed_cards": 0,
+                "average_accuracy": 0.0,
+                "average_difficulty": sum(card.difficulty for card in self.flashcards) / len(self.flashcards),
+                "due_cards": self.due_count
+            }
+
+        total_reviews = sum(card.review_count for card in reviewed_cards)
+        total_correct = sum(card.correct_count for card in reviewed_cards)
+        avg_response_time = sum(card.average_response_time for card in reviewed_cards if card.average_response_time > 0)
+        cards_with_timing = sum(1 for card in reviewed_cards if card.average_response_time > 0)
+
+        return {
+            "total_cards": len(self.flashcards),
+            "reviewed_cards": len(reviewed_cards),
+            "total_reviews": total_reviews,
+            "average_accuracy": (total_correct / total_reviews) if total_reviews > 0 else 0.0,
+            "average_difficulty": sum(card.difficulty for card in self.flashcards) / len(self.flashcards),
+            "average_response_time": (avg_response_time / cards_with_timing) if cards_with_timing > 0 else 0.0,
+            "due_cards": self.due_count,
+            "difficulty_distribution": self.get_difficulty_distribution()
+        }
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert deck to dictionary for serialization."""
         return {

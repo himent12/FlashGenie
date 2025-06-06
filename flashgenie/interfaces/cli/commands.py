@@ -11,6 +11,8 @@ import sys
 
 from flashgenie.core.deck import Deck
 from flashgenie.core.quiz_engine import QuizEngine, QuizMode
+from flashgenie.core.tag_manager import TagManager
+from flashgenie.core.smart_collections import SmartCollectionManager
 from flashgenie.data.storage import DataStorage
 from flashgenie.data.importers.csv_importer import CSVImporter
 from flashgenie.data.importers.txt_importer import TXTImporter
@@ -28,6 +30,8 @@ class CommandHandler:
         self.formatter = OutputFormatter()
         self.storage = DataStorage()
         self.quiz_engine = QuizEngine()
+        self.tag_manager = TagManager()
+        self.collection_manager = SmartCollectionManager(self.tag_manager)
         self.current_deck: Optional[Deck] = None
         
         # Command registry
@@ -38,6 +42,9 @@ class CommandHandler:
             'import': self.import_file,
             'quiz': self.start_quiz,
             'stats': self.show_stats,
+            'collections': self.show_collections,
+            'autotag': self.auto_tag_deck,
+            'tags': self.manage_tags,
             'exit': self.exit_app,
             'quit': self.exit_app,
         }
@@ -79,6 +86,9 @@ Available Commands:
   import <file_path>   - Import flashcards from a file
   quiz [mode]          - Start a quiz session
   stats                - Show statistics for current deck
+  collections          - Show smart collections and their statistics
+  autotag              - Automatically tag cards in current deck
+  tags [command]       - Manage tags and hierarchies
   exit/quit            - Exit the application
 
 Quiz Modes:
@@ -87,10 +97,18 @@ Quiz Modes:
   sequential - Sequential order
   difficult - Difficult cards first
 
+Tag Commands:
+  tags                 - Show tag statistics
+  tags create <path>   - Create new tag (e.g., "Science > Biology")
+  tags suggest         - Suggest tags for untagged cards
+
 Examples:
   load "My Spanish Deck"
   import flashcards.csv
   quiz spaced
+  autotag
+  tags create "Math > Algebra"
+  collections
         """
         print(help_text)
         return True
@@ -246,15 +264,36 @@ Examples:
             if user_answer.lower() in ['quit', 'exit']:
                 break
             
-            # Submit answer
-            correct = self.quiz_engine.submit_answer(question, user_answer)
-            
+            # Ask for confidence rating
+            confidence = None
+            try:
+                confidence_input = input("How confident were you? (1=Very Low, 2=Low, 3=Medium, 4=High, 5=Very High, or press Enter to skip): ").strip()
+                if confidence_input and confidence_input.isdigit():
+                    confidence = int(confidence_input)
+                    if not 1 <= confidence <= 5:
+                        confidence = None
+            except (ValueError, KeyboardInterrupt):
+                confidence = None
+
+            # Submit answer with confidence
+            correct = self.quiz_engine.submit_answer(question, user_answer, confidence=confidence)
+
             # Show result
-            print(self.formatter.quiz_result(
+            result_text = self.formatter.quiz_result(
                 correct,
                 question.flashcard.answer,
                 user_answer if not correct else None
-            ))
+            )
+
+            # Add difficulty adjustment info if available
+            if hasattr(question.flashcard, 'metadata') and 'difficulty_updates' in question.flashcard.metadata:
+                recent_updates = question.flashcard.metadata['difficulty_updates']
+                if recent_updates:
+                    latest_update = recent_updates[-1]
+                    if latest_update.get('reason'):
+                        result_text += f"\n{self.formatter.dim('Difficulty adjusted: ' + latest_update['reason'])}"
+
+            print(result_text)
             
             # Show progress
             stats = self.quiz_engine.get_session_stats()
@@ -284,38 +323,178 @@ Examples:
         if self.current_deck is None:
             print(self.formatter.error("No deck loaded. Use 'load' command first."))
             return True
-        
+
         deck = self.current_deck
-        
+
         print(self.formatter.header(f"Statistics: {deck.name}"))
-        
+
+        # Get comprehensive performance summary
+        performance = deck.get_performance_summary()
+
+        if not performance:
+            print(self.formatter.info("No performance data available"))
+            return True
+
         # Basic stats
-        total_cards = len(deck.flashcards)
-        due_cards = deck.due_count
-        reviewed_cards = sum(1 for card in deck.flashcards if card.review_count > 0)
-        
         stats_data = [
-            ["Total Cards", str(total_cards)],
-            ["Due for Review", str(due_cards)],
-            ["Reviewed Cards", str(reviewed_cards)],
-            ["Average Accuracy", f"{deck.average_accuracy:.1%}"],
+            ["Total Cards", str(performance['total_cards'])],
+            ["Reviewed Cards", str(performance['reviewed_cards'])],
+            ["Due for Review", str(performance['due_cards'])],
+            ["Total Reviews", str(performance.get('total_reviews', 0))],
+            ["Average Accuracy", f"{performance['average_accuracy']:.1%}"],
+            ["Average Difficulty", f"{performance['average_difficulty']:.2f}"],
         ]
-        
+
+        if performance.get('average_response_time', 0) > 0:
+            stats_data.append(["Avg Response Time", f"{performance['average_response_time']:.1f}s"])
+
         print(self.formatter.table(["Metric", "Value"], stats_data))
-        
+
         # Difficulty distribution
-        if deck.flashcards:
-            easy_cards = sum(1 for card in deck.flashcards if card.difficulty < 0.3)
-            medium_cards = sum(1 for card in deck.flashcards if 0.3 <= card.difficulty < 0.7)
-            hard_cards = sum(1 for card in deck.flashcards if card.difficulty >= 0.7)
-            
+        distribution = performance.get('difficulty_distribution', {})
+        if distribution:
             print(f"\nDifficulty Distribution:")
-            print(f"Easy: {easy_cards} cards")
-            print(f"Medium: {medium_cards} cards") 
-            print(f"Hard: {hard_cards} cards")
-        
+            print(f"Easy (0.0-0.33): {distribution.get('easy', 0)} cards")
+            print(f"Medium (0.33-0.67): {distribution.get('medium', 0)} cards")
+            print(f"Hard (0.67-1.0): {distribution.get('hard', 0)} cards")
+
+        # Show cards with recent difficulty adjustments
+        recent_adjustments = []
+        for card in deck.flashcards:
+            if (hasattr(card, 'metadata') and 'difficulty_updates' in card.metadata and
+                card.metadata['difficulty_updates']):
+                recent_adjustments.append(card)
+
+        if recent_adjustments:
+            print(f"\nRecent Difficulty Adjustments: {len(recent_adjustments)} cards")
+            for card in recent_adjustments[:3]:  # Show first 3
+                latest_update = card.metadata['difficulty_updates'][-1]
+                print(f"  {card.question[:40]}... - {latest_update.get('reason', 'Adjusted')}")
+
+        # Show tag distribution
+        tag_counts = {}
+        for card in deck.flashcards:
+            for tag in card.tags:
+                tag_counts[tag] = tag_counts.get(tag, 0) + 1
+
+        if tag_counts:
+            print(f"\nTop Tags:")
+            sorted_tags = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)
+            for tag, count in sorted_tags[:5]:
+                print(f"  {tag}: {count} cards")
+
         return True
-    
+
+    def show_collections(self, args: List[str] = None) -> bool:
+        """Show smart collections and their statistics."""
+        if self.current_deck is None:
+            print(self.formatter.error("No deck loaded. Use 'load' command first."))
+            return True
+
+        print(self.formatter.header("Smart Collections"))
+
+        collections = self.collection_manager.list_collections()
+        if not collections:
+            print(self.formatter.info("No smart collections available."))
+            return True
+
+        for collection_name in collections:
+            collection = self.collection_manager.get_collection(collection_name)
+            if collection:
+                stats = collection.get_statistics(self.current_deck)
+                print(f"\n{self.formatter.highlight(collection_name)}")
+                print(f"  Description: {collection.criteria.description}")
+                print(f"  Cards: {stats['total_cards']}")
+                print(f"  Due: {stats.get('due_cards', 0)}")
+                if stats['total_cards'] > 0:
+                    print(f"  Avg Difficulty: {stats['avg_difficulty']:.2f}")
+                    print(f"  Avg Accuracy: {stats['avg_accuracy']:.1%}")
+
+        return True
+
+    def auto_tag_deck(self, args: List[str] = None) -> bool:
+        """Automatically tag cards in the current deck."""
+        if self.current_deck is None:
+            print(self.formatter.error("No deck loaded. Use 'load' command first."))
+            return True
+
+        print("Analyzing cards for automatic tagging...")
+        tagged_count = self.current_deck.auto_tag_cards(self.tag_manager)
+
+        if tagged_count > 0:
+            print(self.formatter.success(f"Added tags to {tagged_count} cards"))
+            # Save the updated deck
+            self.storage.save_deck(self.current_deck)
+        else:
+            print(self.formatter.info("No new tags were added"))
+
+        return True
+
+    def manage_tags(self, args: List[str] = None) -> bool:
+        """Manage tags and tag hierarchies."""
+        if not args:
+            # Show tag statistics
+            stats = self.tag_manager.get_tag_statistics()
+            print(self.formatter.header("Tag Statistics"))
+            print(f"Total tags: {stats['total_tags']}")
+            print(f"Total aliases: {stats['total_aliases']}")
+            print(f"Auto-tag rules: {stats['total_rules']}")
+            print(f"Hierarchy depth: {stats['hierarchy_depth']}")
+
+            if self.current_deck:
+                # Show tags used in current deck
+                all_tags = set()
+                for card in self.current_deck.flashcards:
+                    all_tags.update(card.tags)
+
+                if all_tags:
+                    print(f"\nTags in current deck:")
+                    for tag in sorted(all_tags):
+                        count = sum(1 for card in self.current_deck.flashcards if tag in card.tags)
+                        print(f"  {tag}: {count} cards")
+
+            return True
+
+        command = args[0].lower()
+
+        if command == "create" and len(args) >= 2:
+            # Create new tag or hierarchy
+            tag_path = args[1]
+            description = " ".join(args[2:]) if len(args) > 2 else ""
+
+            try:
+                if ">" in tag_path:
+                    # Hierarchical tag
+                    tag = self.tag_manager.create_hierarchical_tag(tag_path, {tag_path.split(">")[-1].strip(): description})
+                else:
+                    # Simple tag
+                    tag = self.tag_manager.create_tag(tag_path, description=description)
+
+                print(self.formatter.success(f"Created tag: {tag.name}"))
+            except ValueError as e:
+                print(self.formatter.error(str(e)))
+
+        elif command == "suggest" and self.current_deck:
+            # Suggest tags for untagged cards
+            untagged_cards = [card for card in self.current_deck.flashcards if not card.tags]
+
+            if not untagged_cards:
+                print(self.formatter.info("All cards have tags"))
+                return True
+
+            print(f"Suggesting tags for {len(untagged_cards)} untagged cards:")
+
+            for i, card in enumerate(untagged_cards[:5]):  # Show first 5
+                suggestions = self.tag_manager.suggest_tags(card.question, card.answer)
+                if suggestions:
+                    print(f"\nCard: {card.question[:50]}...")
+                    print(f"Suggested tags: {', '.join(suggestions)}")
+
+        else:
+            print(self.formatter.error("Usage: tags [create <tag_path> [description] | suggest]"))
+
+        return True
+
     def exit_app(self, args: List[str] = None) -> bool:
         """Exit the application."""
         print(self.formatter.success("Thanks for using FlashGenie!"))

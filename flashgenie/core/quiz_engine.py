@@ -15,6 +15,7 @@ import uuid
 from flashgenie.core.flashcard import Flashcard
 from flashgenie.core.deck import Deck
 from flashgenie.core.spaced_repetition import SpacedRepetitionAlgorithm, ReviewResult
+from flashgenie.core.difficulty_analyzer import DifficultyAnalyzer, ConfidenceLevel
 from flashgenie.config import QUIZ_CONFIG
 
 
@@ -47,6 +48,7 @@ class QuizQuestion:
     user_answer: str = ""
     correct: Optional[bool] = None
     quality: Optional[int] = None
+    confidence: Optional[int] = None  # User confidence rating (1-5)
     
     @property
     def response_time(self) -> float:
@@ -153,12 +155,13 @@ class QuizEngine:
     def __init__(self, config: Dict[str, Any] = None):
         """
         Initialize the quiz engine.
-        
+
         Args:
             config: Configuration dictionary
         """
         self.config = config or QUIZ_CONFIG.copy()
         self.sr_algorithm = SpacedRepetitionAlgorithm()
+        self.difficulty_analyzer = DifficultyAnalyzer()
         self.current_session: Optional[QuizSession] = None
         self.answer_checker: Optional[Callable[[str, str], bool]] = None
     
@@ -254,33 +257,46 @@ class QuizEngine:
             return available_cards[0]
     
     def submit_answer(self, question: QuizQuestion, user_answer: str,
-                     quality: int = None) -> bool:
+                     quality: int = None, confidence: int = None) -> bool:
         """
         Submit an answer for a quiz question.
-        
+
         Args:
             question: The quiz question being answered
             user_answer: The user's answer
             quality: Optional quality rating (0-5)
-            
+            confidence: Optional user confidence rating (1-5)
+
         Returns:
             Whether the answer was correct
         """
         question.end_time = datetime.now()
         question.user_answer = user_answer.strip()
-        
+        question.confidence = confidence
+
         # Check if answer is correct
         correct = self._check_answer(
-            question.flashcard.answer, 
+            question.flashcard.answer,
             question.user_answer
         )
         question.correct = correct
-        
+
         # Determine quality if not provided
         if quality is None:
             quality = self._calculate_quality(question)
         question.quality = quality
-        
+
+        # Update flashcard with enhanced data
+        question.flashcard.mark_reviewed(
+            correct=correct,
+            quality=quality,
+            response_time=question.response_time,
+            confidence=confidence
+        )
+
+        # Analyze and potentially adjust difficulty
+        self._analyze_and_adjust_difficulty(question.flashcard, question)
+
         # Update flashcard using spaced repetition
         review_result = ReviewResult(
             quality=quality,
@@ -288,11 +304,51 @@ class QuizEngine:
             correct=correct,
             timestamp=question.end_time
         )
-        
+
         self.sr_algorithm.update_flashcard(question.flashcard, review_result)
-        
+
         return correct
-    
+
+    def _analyze_and_adjust_difficulty(self, flashcard: Flashcard, question: QuizQuestion) -> None:
+        """
+        Analyze performance and adjust difficulty if needed.
+
+        Args:
+            flashcard: The flashcard to analyze
+            question: The quiz question with performance data
+        """
+        # Only adjust difficulty if we have enough data
+        if flashcard.review_count < 3:
+            return
+
+        # Analyze performance
+        performance = self.difficulty_analyzer.analyze_card_performance(flashcard)
+
+        # Check if adjustment is needed
+        if not self.difficulty_analyzer.should_adjust_difficulty(flashcard, performance):
+            return
+
+        # Convert confidence to enum if available
+        user_confidence = None
+        if question.confidence:
+            confidence_map = {1: ConfidenceLevel.VERY_LOW, 2: ConfidenceLevel.LOW,
+                            3: ConfidenceLevel.MEDIUM, 4: ConfidenceLevel.HIGH,
+                            5: ConfidenceLevel.VERY_HIGH}
+            user_confidence = confidence_map.get(question.confidence)
+
+        # Get suggested difficulty
+        old_difficulty = flashcard.difficulty
+        new_difficulty = self.difficulty_analyzer.suggest_difficulty_adjustment(
+            flashcard, performance, user_confidence
+        )
+
+        # Apply adjustment if significant
+        if abs(new_difficulty - old_difficulty) > 0.05:
+            explanation = self.difficulty_analyzer.get_difficulty_explanation(
+                old_difficulty, new_difficulty, performance
+            )
+            flashcard.update_difficulty(new_difficulty, explanation)
+
     def _check_answer(self, correct_answer: str, user_answer: str) -> bool:
         """
         Check if the user's answer is correct.
