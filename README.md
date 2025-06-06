@@ -1,64 +1,136 @@
-FlashGenie
-"Learn smarter, not harder."
+# 🧞‍♂️ FlashGenie
 
-FlashGenie is a smart flashcard generator and quiz app built with Python. It turns your plain text or CSV files into interactive flashcards, using spaced repetition techniques to help you retain knowledge more effectively over time.
+> _"Learn smarter, not harder."_
 
-✨ Features
-📁 Import from CSV or Text
-Easily load question/answer pairs from CSV files or formatted text.
+FlashGenie is a powerful and beginner-friendly flashcard app built with Python. Whether you're prepping for exams, learning a new language, or just trying to retain more information, FlashGenie takes your raw data (CSV or text) and turns it into interactive flashcards—optimized by **spaced repetition** for long-term memory.
 
-🧠 Spaced Repetition
-Uses a basic spaced repetition algorithm to prioritize cards you struggle with.
+---
 
-📝 Interactive Quizzing
-CLI-based flashcard quiz mode with instant feedback.
+## 📸 Preview
 
-📊 Progress Tracking
-Stores your performance to adjust difficulty dynamically.
+![FlashGenie Screenshot](https://user-images.githubusercontent.com/yourusername/flashgenie-preview.png)  
+> _Simple terminal interface (GUI coming soon!)_
 
-📦 Installation
+---
+
+## 🎯 Key Features
+
+- ✅ **Import Flashcards Instantly**
+  - Accepts `.csv` and formatted `.txt` files
+  - Supports custom delimiters and flexible question/answer layouts
+
+- 🧠 **Spaced Repetition Algorithm**
+  - Boosts long-term retention by repeating difficult cards more often
+  - Tracks your performance over time
+
+- 🖥️ **Terminal-Based Quiz Mode**
+  - Clean CLI interface
+  - Instant feedback and score tracking
+
+- 📊 **Performance Tracking**
+  - Optional CSV logging of your quiz sessions
+  - See your improvement over time
+
+- 🔒 **Offline, Private & Secure**
+  - No ads, no trackers—100% offline and personal
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the Repo
+
+```bash
+git clone https://github.com/yourusername/FlashGenie.git
+cd FlashGenie
+2. Install Dependencies
 bash
 Copy
 Edit
-git clone https://github.com/yourusername/FlashGenie.git
-cd FlashGenie
 pip install -r requirements.txt
-🚀 Usage
-Prepare a CSV file like this:
+✅ FlashGenie uses only a few dependencies and is easy to install.
+
+3. Prepare a Flashcard File
+You can use either .csv or .txt format.
+CSV Format Example:
 
 csv
 Copy
 Edit
 Question,Answer
 What is the capital of France?,Paris
-What does HTTP stand for?,HyperText Transfer Protocol
-Run the app:
+What does CPU stand for?,Central Processing Unit
+TXT Format Example:
 
+text
+Copy
+Edit
+Q: What is the capital of Japan?
+A: Tokyo
+
+Q: What gas do plants absorb?
+A: Carbon Dioxide
+🧪 Usage
 bash
 Copy
 Edit
 python flashgenie.py
-Follow the prompts to begin quizzing.
+Choose your flashcard file
+
+Begin answering questions
+
+Get live feedback on correct and incorrect answers
+
+Let the spaced repetition system handle what comes next
 
 🛠️ Tech Stack
-Python 3.x
+Language	Libraries Used	Function
+Python	pandas	CSV handling
+datetime, json	Logging & time tracking
+colorama (opt.)	Terminal coloring (enhanced UX)
 
-pandas for data handling
+📈 Roadmap
+ CSV and text file support
 
-(Optional) tkinter or rich for a better UI/UX in the future
+ Spaced repetition quiz logic
 
-📚 Future Features (Planned)
-GUI with Tkinter or PyQt
+ GUI with Tkinter
 
-Export results to CSV or JSON
+ Deck tagging (e.g., "Biology", "French", "SAT")
 
-Deck categories and filters
+ Import from Quizlet/Anki
 
-Online deck sharing support
+ Export stats dashboard (charts with Matplotlib)
 
-🤝 Contributing
-Pull requests are welcome! For major changes, please open an issue first to discuss your ideas.
+ Web version using Flask or Django
+
+🧑‍💻 Contributing
+Pull requests are welcome! Whether you want to:
+
+Add new features
+
+Fix bugs
+
+Suggest better algorithms or UX
+
+Help with GUI development
+
+Please open an issue or submit a PR with a clear explanation.
 
 📄 License
-MIT License
+This project is licensed under the MIT License.
+See LICENSE file for details.
+
+🌟 Support & Feedback
+If you like this project, please consider ⭐ starring the repo!
+
+Have feedback or suggestions?
+Open an issue or contact me at your.email@example.com.
+
+🙌 Acknowledgments
+Inspired by Anki's spaced repetition concept
+
+Thanks to the open-source Python community
+
+Built with 💻, ☕, and a lot of trial & error!
 
