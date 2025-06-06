@@ -25,7 +25,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         '--version',
         action='version',
-        version=f'{APP_NAME} {APP_VERSION}'
+        version=f'{APP_NAME} 1.0.0'
     )
     
     parser.add_argument(

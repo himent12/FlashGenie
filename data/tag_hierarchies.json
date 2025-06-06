@@ -1,34 +1,14 @@
 {
   "hierarchies": {
-    "science": {
-      "name": "science",
+    "test_tag": {
+      "name": "test_tag",
       "parent": null,
-      "children": [
-        "mathematics"
-      ],
-      "description": "",
-      "color": null
-    },
-    "mathematics": {
-      "name": "mathematics",
-      "parent": "science",
-      "children": [
-        "algebra"
-      ],
-      "description": "",
-      "color": null
-    },
-    "algebra": {
-      "name": "algebra",
-      "parent": "mathematics",
       "children": [],
-      "description": "",
+      "description": "Test tag",
       "color": null
     }
   },
-  "aliases": {
-    "math": "mathematics"
-  },
+  "aliases": {},
   "auto_tag_rules": [
     {
       "patterns": [

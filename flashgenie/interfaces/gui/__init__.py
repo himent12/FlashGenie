@@ -1,11 +1,9 @@
 """
 Graphical user interface for FlashGenie.
 
-This package will provide Tkinter-based GUI components
-for FlashGenie (planned for future implementation).
+This package is reserved for future GUI implementation.
+The current version focuses on the CLI interface.
 """
 
-# TODO: Implement GUI components
-# from flashgenie.interfaces.gui.main_window import MainWindow
-
-__all__ = []  # Will be populated when GUI is implemented
+# GUI implementation planned for future versions
+__all__ = []

@@ -1,11 +1,9 @@
 """
 Web interface for FlashGenie.
 
-This package will provide Flask/Django-based web components
-for FlashGenie (planned for future implementation).
+This package is reserved for future web implementation.
+The current version focuses on the CLI interface.
 """
 
-# TODO: Implement web interface
-# from flashgenie.interfaces.web.app import create_app
-
-__all__ = []  # Will be populated when web interface is implemented
+# Web interface implementation planned for future versions
+__all__ = []
