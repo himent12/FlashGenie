@@ -48,32 +48,27 @@ bash
 Copy
 Edit
 pip install -r requirements.txt
+```
 ✅ FlashGenie uses only a few dependencies and is easy to install.
 
 3. Prepare a Flashcard File
 You can use either .csv or .txt format.
-CSV Format Example:
+CSV Format Example: csv, Copy, Edit, Question and Answer.
+What is the capital of France?
+Paris
+What does CPU stand for?
+Central Processing Unit
 
-csv
-Copy
-Edit
-Question,Answer
-What is the capital of France?,Paris
-What does CPU stand for?,Central Processing Unit
-TXT Format Example:
 
-text
-Copy
-Edit
+TXT Format Example: text, Copy, and Edit.
+
 Q: What is the capital of Japan?
 A: Tokyo
 
 Q: What gas do plants absorb?
 A: Carbon Dioxide
-🧪 Usage
-bash
-Copy
-Edit
+
+🧪 Usage: bash, Copy, and Edit.
 python flashgenie.py
 Choose your flashcard file
 
@@ -125,7 +120,7 @@ See LICENSE file for details.
 If you like this project, please consider ⭐ starring the repo!
 
 Have feedback or suggestions?
-Open an issue or contact me at your.email@example.com.
+Open an issue or contact me at Huckflower@gmail.com.
 
 🙌 Acknowledgments
 Inspired by Anki's spaced repetition concept
