@@ -1,0 +1,123 @@
+{
+  "hierarchies": {
+    "science": {
+      "name": "science",
+      "parent": null,
+      "children": [
+        "mathematics"
+      ],
+      "description": "",
+      "color": null
+    },
+    "mathematics": {
+      "name": "mathematics",
+      "parent": "science",
+      "children": [
+        "algebra"
+      ],
+      "description": "",
+      "color": null
+    },
+    "algebra": {
+      "name": "algebra",
+      "parent": "mathematics",
+      "children": [],
+      "description": "",
+      "color": null
+    }
+  },
+  "aliases": {
+    "math": "mathematics"
+  },
+  "auto_tag_rules": [
+    {
+      "patterns": [
+        "math",
+        "mathematics",
+        "algebra",
+        "geometry",
+        "calculus"
+      ],
+      "tag": "mathematics",
+      "type": "keyword"
+    },
+    {
+      "patterns": [
+        "science",
+        "physics",
+        "chemistry",
+        "biology"
+      ],
+      "tag": "science",
+      "type": "keyword"
+    },
+    {
+      "patterns": [
+        "history",
+        "historical",
+        "war",
+        "ancient",
+        "medieval"
+      ],
+      "tag": "history",
+      "type": "keyword"
+    },
+    {
+      "patterns": [
+        "language",
+        "grammar",
+        "vocabulary",
+        "literature"
+      ],
+      "tag": "language",
+      "type": "keyword"
+    },
+    {
+      "patterns": [
+        "python",
+        "java",
+        "javascript",
+        "programming",
+        "code"
+      ],
+      "tag": "programming",
+      "type": "keyword"
+    },
+    {
+      "patterns": [
+        "algorithm",
+        "data structure",
+        "computer science"
+      ],
+      "tag": "computer_science",
+      "type": "keyword"
+    },
+    {
+      "patterns": [
+        "basic",
+        "fundamental",
+        "introduction"
+      ],
+      "tag": "beginner",
+      "type": "keyword"
+    },
+    {
+      "patterns": [
+        "advanced",
+        "complex",
+        "difficult"
+      ],
+      "tag": "advanced",
+      "type": "keyword"
+    },
+    {
+      "patterns": [
+        "intermediate",
+        "moderate"
+      ],
+      "tag": "intermediate",
+      "type": "keyword"
+    }
+  ],
+  "tag_stats": {}
+}

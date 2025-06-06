@@ -1,0 +1,97 @@
+{
+  "Easy Cards": {
+    "collection_type": "difficulty",
+    "name": "Easy Cards",
+    "description": "Cards with difficulty between 0.0 and 0.3",
+    "filters": {
+      "min_difficulty": 0.0,
+      "max_difficulty": 0.3
+    },
+    "auto_update": true,
+    "created_at": "2025-06-06T22:50:00.355273",
+    "last_updated": "2025-06-06T22:50:00.358683"
+  },
+  "Medium Cards": {
+    "collection_type": "difficulty",
+    "name": "Medium Cards",
+    "description": "Cards with difficulty between 0.3 and 0.7",
+    "filters": {
+      "min_difficulty": 0.3,
+      "max_difficulty": 0.7
+    },
+    "auto_update": true,
+    "created_at": "2025-06-06T22:50:00.355498",
+    "last_updated": null
+  },
+  "Hard Cards": {
+    "collection_type": "difficulty",
+    "name": "Hard Cards",
+    "description": "Cards with difficulty between 0.7 and 1.0",
+    "filters": {
+      "min_difficulty": 0.7,
+      "max_difficulty": 1.0
+    },
+    "auto_update": true,
+    "created_at": "2025-06-06T22:50:00.355669",
+    "last_updated": null
+  },
+  "Struggling Cards": {
+    "collection_type": "performance",
+    "name": "Struggling Cards",
+    "description": "Cards with accuracy <= 60.0%",
+    "filters": {
+      "min_reviews": 3,
+      "max_accuracy": 0.6
+    },
+    "auto_update": true,
+    "created_at": "2025-06-06T22:50:00.356311",
+    "last_updated": "2025-06-06T22:50:00.358691"
+  },
+  "Mastered Cards": {
+    "collection_type": "performance",
+    "name": "Mastered Cards",
+    "description": "Cards with accuracy >= 90.0%",
+    "filters": {
+      "min_reviews": 3,
+      "min_accuracy": 0.9
+    },
+    "auto_update": true,
+    "created_at": "2025-06-06T22:50:00.356863",
+    "last_updated": null
+  },
+  "Due for Review": {
+    "collection_type": "temporal",
+    "name": "Due for Review",
+    "description": "Cards that are due for review",
+    "filters": {
+      "due_only": true
+    },
+    "auto_update": true,
+    "created_at": "2025-06-06T22:50:00.357476",
+    "last_updated": null
+  },
+  "Recently Added": {
+    "collection_type": "temporal",
+    "name": "Recently Added",
+    "description": "Cards added in the last 7 days",
+    "filters": {
+      "created_after": "2025-05-30T22:50:00.358030"
+    },
+    "auto_update": true,
+    "created_at": "2025-06-06T22:50:00.358057",
+    "last_updated": null
+  },
+  "Math Cards": {
+    "collection_type": "tag_based",
+    "name": "Math Cards",
+    "description": "Cards with tags - must have: math",
+    "filters": {
+      "required_tags": [
+        "math"
+      ]
+    },
+    "auto_update": true,
+    "created_at": "2025-06-06T22:50:00.358700",
+    "last_updated": null
+  }
+}
