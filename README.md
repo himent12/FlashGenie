@@ -74,7 +74,7 @@ Who wrote Romeo and Juliet?,Shakespeare,"literature,drama",0.5
 
 ## 🎨 **Rich Terminal Interface**
 
-FlashGenie v1.8.3 features a revolutionary Rich Terminal UI that transforms the command-line experience:
+FlashGenie v1.8.4 features a revolutionary Rich Terminal UI that transforms the command-line experience, now available in both standalone commands and the interactive shell:
 
 ## 🆘 **Comprehensive Help System**
 
@@ -101,6 +101,17 @@ python -m flashgenie search accessibility
 
 # Browse commands by category
 python -m flashgenie help developer
+```
+
+### **Rich Interactive Shell (v1.8.4)**
+```bash
+# Start interactive shell with Rich UI
+python -m flashgenie
+
+# All commands now use beautiful Rich formatting!
+FlashGenie > help        # Rich help system
+FlashGenie > list        # Rich deck tables
+FlashGenie > search quiz # Rich search results
 ```
 
 ### **Beautiful Deck Listings**
