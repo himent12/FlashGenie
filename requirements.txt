@@ -34,6 +34,15 @@ typing-extensions>=4.0.0
 # Dataclasses (built-in Python 3.7+)
 # dataclasses (built-in)
 
+# Plugin system dependencies
+schedule>=1.2.0             # For study reminder scheduling
+
+# Optional plugin dependencies
+# Uncomment as needed for specific plugins:
+pandas>=1.5.0               # For enhanced CSV importer plugin
+chardet>=5.0.0              # For encoding detection in CSV plugin
+# win10toast>=0.9           # For Windows notifications (Windows only)
+
 # Optional: For enhanced features (not required for core functionality)
 # numpy>=1.21.0  # For advanced mathematical operations
 # scipy>=1.7.0   # For statistical analysis

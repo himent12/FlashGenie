@@ -108,7 +108,17 @@ def create_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def handle_import_command(args) -> None:
+def handle_import_command(args)
+
+    # Plugin management
+    plugins_parser = subparsers.add_parser('plugins', help='Manage FlashGenie plugins')
+    plugins_parser.add_argument('action', choices=['list', 'discover', 'enable', 'disable', 'install', 'uninstall', 'info'],
+                               help='Plugin action to perform')
+    plugins_parser.add_argument('--name', help='Plugin name (for enable/disable/uninstall/info)')
+    plugins_parser.add_argument('--path', help='Plugin path (for install)')
+    plugins_parser.add_argument('--category', choices=['official', 'community', 'local', 'development'],
+                               default='local', help='Plugin category (for install)')
+    plugins_parser.set_defaults(func=handle_plugins_command) -> None:
     """Handle the import command."""
     from flashgenie.data.importers.csv_importer import CSVImporter
     from flashgenie.data.importers.txt_importer import TXTImporter
@@ -794,6 +804,173 @@ def handle_suggest_command(args) -> None:
 
     except FlashGenieError as e:
         print(f"Content suggestions failed: {e}")
+        sys.exit(1)
+
+
+def handle_plugins_command(args) -> None:
+    """Handle the plugins command."""
+    from flashgenie.core.plugin_manager import PluginManager
+    from flashgenie.core.plugin_system import PluginStatus, PluginType
+    from flashgenie.utils.exceptions import FlashGenieError
+    from pathlib import Path
+
+    try:
+        plugin_manager = PluginManager()
+
+        if args.action == 'list':
+            # List all plugins
+            plugins = plugin_manager.list_plugins()
+
+            if not plugins:
+                print("No plugins found. Use 'plugins discover' to scan for plugins.")
+                return
+
+            print("🔌 **FlashGenie Plugins**")
+            print("=" * 50)
+
+            # Group by status
+            status_groups = {}
+            for plugin in plugins:
+                status = plugin.status.value
+                if status not in status_groups:
+                    status_groups[status] = []
+                status_groups[status].append(plugin)
+
+            for status, plugin_list in status_groups.items():
+                status_emoji = {
+                    'enabled': '✅',
+                    'installed': '📦',
+                    'disabled': '⏸️',
+                    'error': '❌'
+                }.get(status, '❓')
+
+                print(f"\n{status_emoji} **{status.upper()}** ({len(plugin_list)}):")
+                for plugin in plugin_list:
+                    manifest = plugin.manifest
+                    print(f"   • {manifest.name} v{manifest.version}")
+                    print(f"     {manifest.description}")
+                    print(f"     Type: {manifest.plugin_type.value} | Author: {manifest.author}")
+                    if plugin.error_message:
+                        print(f"     Error: {plugin.error_message}")
+                    print()
+
+        elif args.action == 'discover':
+            # Discover plugins
+            print("🔍 Discovering plugins...")
+            discovered = plugin_manager.discover_plugins()
+            print(f"Found {len(discovered)} plugins: {', '.join(discovered)}")
+
+        elif args.action == 'enable':
+            # Enable plugin
+            if not args.name:
+                print("Error: Plugin name required for enable action")
+                sys.exit(1)
+
+            print(f"🔌 Enabling plugin '{args.name}'...")
+            if plugin_manager.enable_plugin(args.name):
+                print(f"✅ Plugin '{args.name}' enabled successfully")
+            else:
+                print(f"❌ Failed to enable plugin '{args.name}'")
+                sys.exit(1)
+
+        elif args.action == 'disable':
+            # Disable plugin
+            if not args.name:
+                print("Error: Plugin name required for disable action")
+                sys.exit(1)
+
+            print(f"⏸️ Disabling plugin '{args.name}'...")
+            if plugin_manager.disable_plugin(args.name):
+                print(f"✅ Plugin '{args.name}' disabled successfully")
+            else:
+                print(f"❌ Failed to disable plugin '{args.name}'")
+                sys.exit(1)
+
+        elif args.action == 'install':
+            # Install plugin
+            if not args.path:
+                print("Error: Plugin path required for install action")
+                sys.exit(1)
+
+            plugin_path = Path(args.path)
+            if not plugin_path.exists():
+                print(f"Error: Plugin path does not exist: {plugin_path}")
+                sys.exit(1)
+
+            category = getattr(args, 'category', 'local')
+            print(f"📦 Installing plugin from '{plugin_path}'...")
+
+            if plugin_manager.install_plugin(plugin_path, category):
+                print(f"✅ Plugin installed successfully")
+            else:
+                print(f"❌ Failed to install plugin")
+                sys.exit(1)
+
+        elif args.action == 'uninstall':
+            # Uninstall plugin
+            if not args.name:
+                print("Error: Plugin name required for uninstall action")
+                sys.exit(1)
+
+            print(f"🗑️ Uninstalling plugin '{args.name}'...")
+            if plugin_manager.uninstall_plugin(args.name):
+                print(f"✅ Plugin '{args.name}' uninstalled successfully")
+            else:
+                print(f"❌ Failed to uninstall plugin '{args.name}'")
+                sys.exit(1)
+
+        elif args.action == 'info':
+            # Show plugin info
+            if not args.name:
+                print("Error: Plugin name required for info action")
+                sys.exit(1)
+
+            plugins = plugin_manager.list_plugins()
+            plugin_info = next((p for p in plugins if p.manifest.name == args.name), None)
+
+            if not plugin_info:
+                print(f"Error: Plugin '{args.name}' not found")
+                sys.exit(1)
+
+            manifest = plugin_info.manifest
+            print(f"🔌 **Plugin Information: {manifest.name}**")
+            print("=" * 50)
+            print(f"Name: {manifest.name}")
+            print(f"Version: {manifest.version}")
+            print(f"Description: {manifest.description}")
+            print(f"Author: {manifest.author}")
+            print(f"License: {manifest.license}")
+            print(f"Type: {manifest.plugin_type.value}")
+            print(f"Status: {plugin_info.status.value}")
+            print(f"FlashGenie Version: {manifest.flashgenie_version}")
+
+            if manifest.permissions:
+                print(f"\nPermissions:")
+                for perm in manifest.permissions:
+                    desc = plugin_manager.security_manager.get_permission_description(perm)
+                    print(f"   • {perm.value}: {desc}")
+
+            if manifest.dependencies:
+                print(f"\nDependencies:")
+                for dep in manifest.dependencies:
+                    print(f"   • {dep}")
+
+            if manifest.homepage:
+                print(f"\nHomepage: {manifest.homepage}")
+
+            if manifest.repository:
+                print(f"Repository: {manifest.repository}")
+
+            if plugin_info.error_message:
+                print(f"\nError: {plugin_info.error_message}")
+
+        else:
+            print(f"Unknown plugins action: {args.action}")
+            print("Available actions: list, discover, enable, disable, install, uninstall, info")
+            sys.exit(1)
+
+    except FlashGenieError as e:
+        print(f"Plugin operation failed: {e}")
         sys.exit(1)
 
 

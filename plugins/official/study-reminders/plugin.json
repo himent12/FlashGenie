@@ -1,0 +1,48 @@
+{
+  "name": "study-reminders",
+  "version": "1.0.0",
+  "description": "Intelligent study reminder system with spaced repetition scheduling and motivational messages",
+  "author": "FlashGenie Team", 
+  "license": "MIT",
+  "flashgenie_version": ">=1.6.0",
+  "type": "integration",
+  "entry_point": "StudyRemindersPlugin",
+  "permissions": ["user_data", "system_integration"],
+  "dependencies": [],
+  "settings_schema": {
+    "enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable study reminders"
+    },
+    "reminder_times": {
+      "type": "array",
+      "items": {"type": "string"},
+      "default": ["09:00", "18:00"],
+      "description": "Daily reminder times (24-hour format)"
+    },
+    "motivational_messages": {
+      "type": "boolean", 
+      "default": true,
+      "description": "Include motivational messages in reminders"
+    },
+    "smart_scheduling": {
+      "type": "boolean",
+      "default": true,
+      "description": "Use AI to optimize reminder timing"
+    },
+    "weekend_reminders": {
+      "type": "boolean",
+      "default": false,
+      "description": "Send reminders on weekends"
+    },
+    "min_cards_due": {
+      "type": "integer",
+      "default": 5,
+      "description": "Minimum cards due before sending reminder"
+    }
+  },
+  "homepage": "https://github.com/himent12/FlashGenie",
+  "repository": "https://github.com/himent12/FlashGenie",
+  "tags": ["reminders", "notifications", "motivation", "official"]
+}
