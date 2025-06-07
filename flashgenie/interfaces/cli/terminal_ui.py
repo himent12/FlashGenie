@@ -1,8 +1,8 @@
 """
-Terminal-based user interface for FlashGenie.
+Terminal-based user interface for FlashGenie v1.8.3.
 
 This module provides the main terminal interface for interacting
-with FlashGenie through the command line.
+with FlashGenie through the command line. Enhanced with Rich UI framework.
 """
 
 import sys
@@ -13,57 +13,103 @@ from flashgenie.interfaces.cli.commands import CommandHandler
 from flashgenie.interfaces.cli.formatters import OutputFormatter
 from flashgenie.config import APP_NAME, APP_VERSION
 
+# Enhanced Rich UI components
+try:
+    from ..terminal import RichTerminalUI
+    RICH_UI_AVAILABLE = True
+except ImportError:
+    RICH_UI_AVAILABLE = False
+
 
 class TerminalUI:
     """
-    Main terminal user interface for FlashGenie.
-    
+    Main terminal user interface for FlashGenie v1.8.3.
+
     Provides an interactive command-line interface for managing
     flashcards, importing data, and running quiz sessions.
+    Enhanced with Rich UI framework for better user experience.
     """
-    
-    def __init__(self):
-        """Initialize the terminal UI."""
+
+    def __init__(self, use_rich_ui: bool = True):
+        """
+        Initialize the terminal UI.
+
+        Args:
+            use_rich_ui: Whether to use Rich UI framework (falls back to basic if unavailable)
+        """
         self.formatter = OutputFormatter()
         self.command_handler = CommandHandler()
         self.running = False
+
+        # Initialize Rich UI if available and requested
+        self.use_rich_ui = use_rich_ui and RICH_UI_AVAILABLE
+        if self.use_rich_ui:
+            self.rich_ui = RichTerminalUI()
+            self.rich_ui.navigation.push_context("home", "FlashGenie Home")
+        else:
+            self.rich_ui = None
     
     def start(self) -> None:
-        """Start the terminal interface."""
+        """Start the terminal interface with enhanced UI."""
+        # Check terminal size for optimal experience
+        if self.use_rich_ui and self.rich_ui.is_terminal_too_small():
+            self.rich_ui.show_warning(
+                "Terminal window is quite small. For the best experience, please resize to at least 80x24 characters.",
+                "Small Terminal"
+            )
+
         self.show_welcome()
         self.running = True
-        
+
+        # Register navigation shortcuts
+        if self.use_rich_ui:
+            self._register_shortcuts()
+
         while self.running:
             try:
                 command_line = self.get_command_input()
                 if not command_line:
                     continue
-                
+
+                # Check for keyboard shortcuts first
+                if self.use_rich_ui and self.rich_ui.navigation.handle_shortcut(command_line):
+                    continue
+
                 # Parse command and arguments
                 parts = command_line.split()
                 command = parts[0].lower()
                 args = parts[1:] if len(parts) > 1 else []
-                
+
                 # Handle command
                 self.running = self.command_handler.handle_command(command, args)
-                
+
             except KeyboardInterrupt:
-                print("\n" + self.formatter.info("Use 'exit' or 'quit' to leave FlashGenie"))
+                if self.use_rich_ui:
+                    self.rich_ui.show_info("Use 'exit' or 'quit' to leave FlashGenie", "Interrupted")
+                else:
+                    print("\n" + self.formatter.info("Use 'exit' or 'quit' to leave FlashGenie"))
             except EOFError:
-                print("\n" + self.formatter.success("Goodbye!"))
+                if self.use_rich_ui:
+                    self.rich_ui.show_success("Goodbye! 👋", "FlashGenie")
+                else:
+                    print("\n" + self.formatter.success("Goodbye!"))
                 break
     
     def show_welcome(self) -> None:
-        """Display welcome message and basic information."""
-        welcome_text = f"""
+        """Display welcome message and basic information with enhanced UI."""
+        if self.use_rich_ui:
+            self.rich_ui.show_welcome_screen()
+        else:
+            # Fallback to basic welcome
+            welcome_text = f"""
 {self.formatter.header(f"🧞‍♂️ {APP_NAME} v{APP_VERSION}")}
 
 Welcome to FlashGenie - Your intelligent flashcard companion!
 
 {self.formatter.info("Type 'help' for available commands")}
 {self.formatter.info("Type 'import <file>' to get started with your flashcards")}
-        """
-        print(welcome_text)
+            """
+            print(welcome_text)
     
     def get_command_input(self) -> str:
         """Get command input from user."""
@@ -246,6 +292,47 @@ Welcome to FlashGenie - Your intelligent flashcard companion!
         
         if ui.command_handler.current_deck:
             ui.command_handler.handle_command('quiz', ['spaced'])
+
+    def _register_shortcuts(self) -> None:
+        """Register keyboard shortcuts for enhanced navigation."""
+        if not self.use_rich_ui:
+            return
+
+        # Navigation shortcuts
+        self.rich_ui.navigation.register_shortcut(
+            "m", "Main Menu", lambda: self.show_main_menu(), "home"
+        )
+        self.rich_ui.navigation.register_shortcut(
+            "i", "Import", lambda: self.run_interactive_import(), "home"
+        )
+        self.rich_ui.navigation.register_shortcut(
+            "l", "List Decks", lambda: self.command_handler.handle_command('list'), "home"
+        )
+        self.rich_ui.navigation.register_shortcut(
+            "s", "Stats", lambda: self.command_handler.handle_command('stats'), "home"
+        )
+        self.rich_ui.navigation.register_shortcut(
+            "t", "Toggle Theme", self._cycle_theme, "home"
+        )
+
+    def _cycle_theme(self) -> None:
+        """Cycle through available themes."""
+        if not self.use_rich_ui:
+            return
+
+        themes = self.rich_ui.theme_manager.list_themes()
+        current_theme = getattr(self.rich_ui, '_current_theme_name', 'default')
+
+        try:
+            current_index = themes.index(current_theme)
+            next_index = (current_index + 1) % len(themes)
+            next_theme = themes[next_index]
+
+            self.rich_ui.set_theme(next_theme)
+            self.rich_ui._current_theme_name = next_theme
+        except (ValueError, IndexError):
+            self.rich_ui.set_theme('default')
+            self.rich_ui._current_theme_name = 'default'
 
 
 def main():

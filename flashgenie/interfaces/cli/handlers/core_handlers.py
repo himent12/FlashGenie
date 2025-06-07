@@ -2,53 +2,92 @@
 Core command handlers for FlashGenie CLI.
 
 This module contains handlers for basic FlashGenie operations like import, quiz, list, stats, and export.
+Enhanced for v1.8.3 with Rich Terminal UI.
 """
 
 import sys
 from pathlib import Path
 from flashgenie.utils.exceptions import FlashGenieError
 
+# Rich UI components for enhanced terminal interface
+try:
+    from ...terminal import RichTerminalUI
+    RICH_UI_AVAILABLE = True
+except ImportError:
+    RICH_UI_AVAILABLE = False
+    print("Warning: Rich UI not available, falling back to basic terminal interface")
+
 
 def handle_import_command(args) -> None:
-    """Handle the import command."""
+    """Handle the import command with enhanced Rich UI."""
     from flashgenie.data.storage import DataStorage
     from flashgenie.data.importers import CSVImporter, TXTImporter
-    
+
+    # Initialize UI
+    if RICH_UI_AVAILABLE:
+        ui = RichTerminalUI()
+        ui.navigation.push_context("import", "Import Flashcards")
+
     storage = DataStorage()
-    
+
     try:
         file_path = Path(args.file)
         if not file_path.exists():
-            print(f"Error: File '{args.file}' not found")
+            if RICH_UI_AVAILABLE:
+                ui.show_error(f"File '{args.file}' not found", "Import Error")
+            else:
+                print(f"Error: File '{args.file}' not found")
             sys.exit(1)
-        
+
         # Determine format
         if args.format:
             format_type = args.format
         else:
             format_type = file_path.suffix.lower().lstrip('.')
-        
+
         # Select appropriate importer
         if format_type == 'csv':
             importer = CSVImporter()
         elif format_type in ['txt', 'text']:
             importer = TXTImporter()
         else:
-            print(f"Error: Unsupported file format '{format_type}'")
-            print("Supported formats: csv, txt")
+            error_msg = f"Unsupported file format '{format_type}'\nSupported formats: csv, txt"
+            if RICH_UI_AVAILABLE:
+                ui.show_error(error_msg, "Format Error")
+            else:
+                print(f"Error: {error_msg}")
             sys.exit(1)
-        
-        # Import the file
-        print(f"Importing from {file_path}...")
-        deck = importer.import_file(file_path, args.name)
-        
-        # Save the deck
-        storage.save_deck(deck)
-        
-        print(f"✅ Successfully imported {len(deck.flashcards)} cards into deck '{deck.name}'")
-        
+
+        # Import the file with progress indication
+        if RICH_UI_AVAILABLE:
+            with ui.widgets.create_status_indicator(f"Importing from {file_path.name}..."):
+                deck = importer.import_file(file_path, deck_name=args.name)
+                storage.save_deck(deck)
+
+            # Show success message with details
+            success_msg = f"Successfully imported {len(deck.flashcards)} cards into deck '{deck.name}'"
+            ui.show_success(success_msg, "Import Complete")
+
+            # Show deck summary
+            deck_stats = {
+                "Name": deck.name,
+                "Cards": len(deck.flashcards),
+                "File": str(file_path),
+                "Format": format_type.upper()
+            }
+            stats_panel = ui.widgets.create_stats_panel(deck_stats, "Import Summary")
+            ui.console.print(stats_panel)
+        else:
+            print(f"Importing from {file_path}...")
+            deck = importer.import_file(file_path, deck_name=args.name)
+            storage.save_deck(deck)
+            print(f"✅ Successfully imported {len(deck.flashcards)} cards into deck '{deck.name}'")
+
     except FlashGenieError as e:
-        print(f"Import failed: {e}")
+        if RICH_UI_AVAILABLE:
+            ui.show_error(str(e), "Import Failed")
+        else:
+            print(f"Import failed: {e}")
         sys.exit(1)
 
 
@@ -119,54 +158,109 @@ def handle_quiz_command(args) -> None:
 
 
 def handle_list_command(args) -> None:
-    """Handle the list command."""
+    """Handle the list command with enhanced Rich UI."""
     from flashgenie.data.storage import DataStorage
-    
+
+    # Initialize UI
+    if RICH_UI_AVAILABLE:
+        ui = RichTerminalUI()
+        ui.navigation.push_context("list", "Deck List")
+
     storage = DataStorage()
-    
+
     try:
         decks = storage.list_decks()
-        
+
         if not decks:
-            print("No decks found. Import some flashcards to get started.")
+            if RICH_UI_AVAILABLE:
+                ui.show_info("No decks found. Import some flashcards to get started.", "Empty Library")
+            else:
+                print("No decks found. Import some flashcards to get started.")
             return
-        
-        print("📚 **Your Flashcard Decks**")
-        print("=" * 50)
-        
-        for deck_info in decks:
-            print(f"📖 **{deck_info['name']}**")
-            print(f"   Cards: {deck_info['card_count']}")
-            print(f"   Created: {deck_info['created_at'].strftime('%Y-%m-%d %H:%M')}")
-            print(f"   Modified: {deck_info['modified_at'].strftime('%Y-%m-%d %H:%M')}")
-            
+
+        if RICH_UI_AVAILABLE:
+            # Create enhanced table display
+            headers = ["Name", "Cards", "Created", "Modified"]
+            rows = []
+
+            for deck_info in decks:
+                # Handle both datetime objects and strings
+                created_at = deck_info['created_at']
+                modified_at = deck_info['modified_at']
+
+                if hasattr(created_at, 'strftime'):
+                    created = created_at.strftime('%Y-%m-%d')
+                else:
+                    created = str(created_at)[:10]  # Take first 10 chars if string
+
+                if hasattr(modified_at, 'strftime'):
+                    modified = modified_at.strftime('%Y-%m-%d')
+                else:
+                    modified = str(modified_at)[:10]  # Take first 10 chars if string
+
+                row = [
+                    deck_info['name'],
+                    str(deck_info['card_count']),
+                    created,
+                    modified
+                ]
+
+                if args.detailed:
+                    # Load full deck for detailed stats
+                    deck = storage.load_deck(deck_info['id'])
+                    if deck and len(deck.flashcards) > 0:
+                        avg_difficulty = sum(card.difficulty for card in deck.flashcards) / len(deck.flashcards)
+                        row.append(f"{avg_difficulty:.2f}")
+
+                rows.append(row)
+
             if args.detailed:
-                # Load full deck for detailed stats
-                deck = storage.load_deck(deck_info['id'])
-                if deck:
-                    # Calculate basic stats
-                    total_cards = len(deck.flashcards)
-                    if total_cards > 0:
-                        avg_difficulty = sum(card.difficulty for card in deck.flashcards) / total_cards
-                        print(f"   Average difficulty: {avg_difficulty:.2f}")
-                        
-                        # Tag distribution
-                        all_tags = []
-                        for card in deck.flashcards:
-                            all_tags.extend(card.tags)
-                        
-                        if all_tags:
-                            unique_tags = list(set(all_tags))
-                            print(f"   Tags: {', '.join(unique_tags[:5])}")
-                            if len(unique_tags) > 5:
-                                print(f"         ... and {len(unique_tags) - 5} more")
-            
-            print()
-        
-        print(f"Total: {len(decks)} deck{'s' if len(decks) != 1 else ''}")
-        
+                headers.append("Avg Difficulty")
+
+            # Create and display table
+            table = ui.widgets.create_table("📚 Your Flashcard Decks", headers, rows)
+            ui.console.print(table)
+
+            # Show summary stats
+            total_cards = sum(deck_info['card_count'] for deck_info in decks)
+            summary_stats = {
+                "Total Decks": len(decks),
+                "Total Cards": total_cards,
+                "Average Cards per Deck": f"{total_cards / len(decks):.1f}" if decks else "0"
+            }
+
+            if decks:
+                most_recent = max(decks, key=lambda d: d['modified_at'] if hasattr(d['modified_at'], 'strftime') else d['modified_at'])
+                modified_str = most_recent['modified_at'].strftime('%Y-%m-%d') if hasattr(most_recent['modified_at'], 'strftime') else str(most_recent['modified_at'])[:10]
+                summary_stats["Most Recent"] = f"{most_recent['name']} ({modified_str})"
+
+            stats_panel = ui.widgets.create_stats_panel(summary_stats, "Library Summary")
+            ui.console.print(stats_panel)
+
+        else:
+            # Fallback to basic display
+            print("📚 **Your Flashcard Decks**")
+            print("=" * 50)
+
+            for deck_info in decks:
+                print(f"📖 **{deck_info['name']}**")
+                print(f"   Cards: {deck_info['card_count']}")
+
+                # Handle both datetime objects and strings
+                created_str = deck_info['created_at'].strftime('%Y-%m-%d %H:%M') if hasattr(deck_info['created_at'], 'strftime') else str(deck_info['created_at'])
+                modified_str = deck_info['modified_at'].strftime('%Y-%m-%d %H:%M') if hasattr(deck_info['modified_at'], 'strftime') else str(deck_info['modified_at'])
+
+                print(f"   Created: {created_str}")
+                print(f"   Modified: {modified_str}")
+                print()
+
+            print(f"Total: {len(decks)} deck{'s' if len(decks) != 1 else ''}")
+
     except FlashGenieError as e:
-        print(f"Failed to list decks: {e}")
+        if RICH_UI_AVAILABLE:
+            ui.show_error(str(e), "List Error")
+        else:
+            print(f"Failed to list decks: {e}")
         sys.exit(1)
 
 
@@ -257,8 +351,9 @@ def handle_stats_command(args) -> None:
             
             if decks:
                 # Most recent activity
-                most_recent = max(decks, key=lambda d: d['modified_at'])
-                print(f"Most recent activity: {most_recent['name']} ({most_recent['modified_at'].strftime('%Y-%m-%d %H:%M')})")
+                most_recent = max(decks, key=lambda d: d['modified_at'] if hasattr(d['modified_at'], 'strftime') else d['modified_at'])
+                modified_str = most_recent['modified_at'].strftime('%Y-%m-%d %H:%M') if hasattr(most_recent['modified_at'], 'strftime') else str(most_recent['modified_at'])
+                print(f"Most recent activity: {most_recent['name']} ({modified_str})")
         
     except FlashGenieError as e:
         print(f"Stats failed: {e}")

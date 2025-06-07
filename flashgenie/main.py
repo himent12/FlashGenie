@@ -31,7 +31,7 @@ def main():
         setup_logging(log_level)
         logger = logging.getLogger(__name__)
 
-        logger.info(f"Starting FlashGenie v1.8.2")
+        logger.info(f"Starting FlashGenie v1.8.3")
         logger.debug(f"Command: {getattr(args, 'command', 'unknown')}")
 
         # Validate environment
