@@ -1,0 +1,28 @@
+{
+  "name": "dark-theme",
+  "version": "1.0.0",
+  "description": "Dark theme for FlashGenie with improved readability in low-light environments",
+  "author": "FlashGenie Team",
+  "license": "MIT",
+  "flashgenie_version": ">=1.6.0",
+  "type": "theme",
+  "entry_point": "DarkThemePlugin",
+  "permissions": [],
+  "dependencies": [],
+  "settings_schema": {
+    "accent_color": {
+      "type": "string",
+      "default": "#007acc",
+      "description": "Accent color for highlights and buttons"
+    },
+    "contrast_level": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "default": "medium",
+      "description": "Contrast level for better accessibility"
+    }
+  },
+  "homepage": "https://github.com/himent12/FlashGenie",
+  "repository": "https://github.com/himent12/FlashGenie",
+  "tags": ["theme", "dark", "accessibility", "official"]
+}
