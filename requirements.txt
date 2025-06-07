@@ -42,6 +42,8 @@ schedule>=1.2.0             # For study reminder scheduling
 pandas>=1.5.0               # For enhanced CSV importer plugin
 chardet>=5.0.0              # For encoding detection in CSV plugin
 # win10toast>=0.9           # For Windows notifications (Windows only)
+# pyttsx3>=2.90             # For voice integration plugin (TTS)
+# SpeechRecognition>=3.10.0 # For voice integration plugin (STT)
 
 # Optional: For enhanced features (not required for core functionality)
 # numpy>=1.21.0  # For advanced mathematical operations

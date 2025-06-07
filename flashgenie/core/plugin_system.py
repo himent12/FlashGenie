@@ -226,20 +226,77 @@ class QuizModePlugin(BasePlugin):
 
 class ThemePlugin(BasePlugin):
     """Base class for theme plugins."""
-    
+
     @abstractmethod
     def get_theme_name(self) -> str:
         """Get the name of this theme."""
         pass
-    
+
     @abstractmethod
     def apply_theme(self) -> Dict[str, Any]:
         """Apply theme and return theme configuration."""
         pass
-    
+
     @abstractmethod
     def get_theme_info(self) -> Dict[str, Any]:
         """Get theme information and preview."""
+        pass
+
+
+class AIEnhancementPlugin(BasePlugin):
+    """Base class for AI enhancement plugins."""
+
+    @abstractmethod
+    def get_ai_capabilities(self) -> List[str]:
+        """Get list of AI capabilities this plugin provides."""
+        pass
+
+    @abstractmethod
+    def process_content(self, content: str, task: str, **kwargs) -> Dict[str, Any]:
+        """Process content using AI capabilities."""
+        pass
+
+    @abstractmethod
+    def get_model_info(self) -> Dict[str, Any]:
+        """Get information about the AI model used."""
+        pass
+
+
+class AnalyticsPlugin(BasePlugin):
+    """Base class for analytics plugins."""
+
+    @abstractmethod
+    def generate_insights(self, deck, timeframe: str = "30d") -> Dict[str, Any]:
+        """Generate learning insights for a deck."""
+        pass
+
+    @abstractmethod
+    def get_metrics(self) -> List[str]:
+        """Get list of metrics this plugin can calculate."""
+        pass
+
+    @abstractmethod
+    def export_data(self, deck, format_type: str) -> bytes:
+        """Export analytics data in specified format."""
+        pass
+
+
+class IntegrationPlugin(BasePlugin):
+    """Base class for integration plugins."""
+
+    @abstractmethod
+    def get_service_name(self) -> str:
+        """Get the name of the external service."""
+        pass
+
+    @abstractmethod
+    def authenticate(self, credentials: Dict[str, str]) -> bool:
+        """Authenticate with the external service."""
+        pass
+
+    @abstractmethod
+    def sync_data(self, operation: str, data: Any) -> Dict[str, Any]:
+        """Sync data with external service."""
         pass
 
 

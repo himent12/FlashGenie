@@ -16,9 +16,10 @@ from datetime import datetime
 import logging
 
 from flashgenie.core.plugin_system import (
-    BasePlugin, PluginManifest, PluginInfo, PluginType, PluginStatus, 
+    BasePlugin, PluginManifest, PluginInfo, PluginType, PluginStatus,
     Permission, PluginError, PluginSecurityManager,
-    ImporterPlugin, ExporterPlugin, QuizModePlugin, ThemePlugin
+    ImporterPlugin, ExporterPlugin, QuizModePlugin, ThemePlugin,
+    AIEnhancementPlugin, AnalyticsPlugin, IntegrationPlugin
 )
 from flashgenie.config import APP_VERSION
 from flashgenie.utils.exceptions import FlashGenieError
@@ -40,6 +41,9 @@ class PluginManager:
             PluginType.EXPORTER: ExporterPlugin,
             PluginType.QUIZ_MODE: QuizModePlugin,
             PluginType.THEME: ThemePlugin,
+            PluginType.AI_ENHANCEMENT: AIEnhancementPlugin,
+            PluginType.ANALYTICS: AnalyticsPlugin,
+            PluginType.INTEGRATION: IntegrationPlugin,
         }
         
         # Ensure plugin directories exist

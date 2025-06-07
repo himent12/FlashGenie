@@ -118,7 +118,21 @@ def handle_import_command(args)
     plugins_parser.add_argument('--path', help='Plugin path (for install)')
     plugins_parser.add_argument('--category', choices=['official', 'community', 'local', 'development'],
                                default='local', help='Plugin category (for install)')
-    plugins_parser.set_defaults(func=handle_plugins_command) -> None:
+    plugins_parser.set_defaults(func=handle_plugins_command)
+
+    # Plugin Development Kit
+    pdk_parser = subparsers.add_parser('pdk', help='Plugin Development Kit - tools for plugin developers')
+    pdk_parser.add_argument('action', choices=['create', 'validate', 'test', 'package'],
+                           help='PDK action to perform')
+    pdk_parser.add_argument('--name', help='Plugin name (for create)')
+    pdk_parser.add_argument('--type', choices=['importer', 'exporter', 'theme', 'quiz_mode', 'ai_enhancement', 'analytics', 'integration'],
+                           help='Plugin type (for create)')
+    pdk_parser.add_argument('--author', default='Plugin Developer', help='Plugin author (for create)')
+    pdk_parser.add_argument('--path', help='Plugin path (for validate/test/package)')
+    pdk_parser.add_argument('--output', help='Output directory (for package)')
+    pdk_parser.add_argument('--test-mode', choices=['basic', 'detailed', 'comprehensive'],
+                           default='basic', help='Test mode (for test)')
+    pdk_parser.set_defaults(func=handle_pdk_command) -> None:
     """Handle the import command."""
     from flashgenie.data.importers.csv_importer import CSVImporter
     from flashgenie.data.importers.txt_importer import TXTImporter
@@ -971,6 +985,147 @@ def handle_plugins_command(args) -> None:
 
     except FlashGenieError as e:
         print(f"Plugin operation failed: {e}")
+        sys.exit(1)
+
+
+def handle_pdk_command(args) -> None:
+    """Handle the Plugin Development Kit command."""
+    from flashgenie.core.plugin_dev_kit import PluginDevelopmentKit
+    from flashgenie.core.plugin_system import PluginType
+    from flashgenie.utils.exceptions import FlashGenieError
+    from pathlib import Path
+
+    try:
+        pdk = PluginDevelopmentKit()
+
+        if args.action == 'create':
+            # Create new plugin scaffold
+            if not args.name:
+                print("Error: Plugin name required for create action")
+                sys.exit(1)
+
+            if not args.type:
+                print("Error: Plugin type required for create action")
+                sys.exit(1)
+
+            try:
+                plugin_type = PluginType(args.type)
+            except ValueError:
+                print(f"Error: Invalid plugin type: {args.type}")
+                print(f"Available types: {', '.join([t.value for t in PluginType])}")
+                sys.exit(1)
+
+            print(f"🏗️ Creating {args.type} plugin: {args.name}")
+            plugin_dir = pdk.create_plugin_scaffold(args.name, plugin_type, args.author)
+
+            print(f"\n🎉 Plugin scaffold created successfully!")
+            print(f"📁 Location: {plugin_dir}")
+            print(f"\n📋 Next steps:")
+            print(f"   1. Edit {plugin_dir}/plugin.json to configure your plugin")
+            print(f"   2. Implement your plugin in {plugin_dir}/__init__.py")
+            print(f"   3. Test your plugin: python -m flashgenie pdk test --path {plugin_dir}")
+            print(f"   4. Package your plugin: python -m flashgenie pdk package --path {plugin_dir}")
+
+        elif args.action == 'validate':
+            # Validate plugin
+            if not args.path:
+                print("Error: Plugin path required for validate action")
+                sys.exit(1)
+
+            plugin_path = Path(args.path)
+            if not plugin_path.exists():
+                print(f"Error: Plugin path does not exist: {plugin_path}")
+                sys.exit(1)
+
+            print(f"🔍 Validating plugin: {plugin_path}")
+            results = pdk.validate_plugin(plugin_path)
+
+            if results["valid"]:
+                print("✅ Plugin validation passed!")
+            else:
+                print("❌ Plugin validation failed!")
+
+            if results["errors"]:
+                print(f"\n🚨 Errors ({len(results['errors'])}):")
+                for error in results["errors"]:
+                    print(f"   • {error}")
+
+            if results["warnings"]:
+                print(f"\n⚠️ Warnings ({len(results['warnings'])}):")
+                for warning in results["warnings"]:
+                    print(f"   • {warning}")
+
+            if results["suggestions"]:
+                print(f"\n💡 Suggestions ({len(results['suggestions'])}):")
+                for suggestion in results["suggestions"]:
+                    print(f"   • {suggestion}")
+
+            if not results["valid"]:
+                sys.exit(1)
+
+        elif args.action == 'test':
+            # Test plugin
+            if not args.path:
+                print("Error: Plugin path required for test action")
+                sys.exit(1)
+
+            plugin_path = Path(args.path)
+            if not plugin_path.exists():
+                print(f"Error: Plugin path does not exist: {plugin_path}")
+                sys.exit(1)
+
+            print(f"🧪 Testing plugin: {plugin_path}")
+            results = pdk.test_plugin(plugin_path, args.test_mode)
+
+            print(f"\n📊 Test Results:")
+            print(f"   Tests run: {results['tests_run']}")
+            print(f"   Tests passed: {results['tests_passed']}")
+            print(f"   Tests failed: {results['tests_failed']}")
+
+            if results["output"]:
+                print(f"\n📝 Test Output:")
+                for output in results["output"]:
+                    print(f"   {output}")
+
+            if results["errors"]:
+                print(f"\n🚨 Errors:")
+                for error in results["errors"]:
+                    print(f"   • {error}")
+
+            if results["success"]:
+                print("\n🎉 All tests passed!")
+            else:
+                print("\n❌ Some tests failed!")
+                sys.exit(1)
+
+        elif args.action == 'package':
+            # Package plugin
+            if not args.path:
+                print("Error: Plugin path required for package action")
+                sys.exit(1)
+
+            plugin_path = Path(args.path)
+            if not plugin_path.exists():
+                print(f"Error: Plugin path does not exist: {plugin_path}")
+                sys.exit(1)
+
+            output_dir = Path(args.output) if args.output else None
+
+            print(f"📦 Packaging plugin: {plugin_path}")
+            package_path = pdk.package_plugin(plugin_path, output_dir)
+
+            print(f"\n🎉 Plugin packaged successfully!")
+            print(f"📁 Package location: {package_path}")
+            print(f"\n📋 Installation instructions:")
+            print(f"   python -m flashgenie plugins install {package_path}")
+
+        else:
+            print(f"Unknown PDK action: {args.action}")
+            print("Available actions: create, validate, test, package")
+            sys.exit(1)
+
+    except FlashGenieError as e:
+        print(f"PDK operation failed: {e}")
         sys.exit(1)
 
 

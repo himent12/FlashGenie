@@ -1,0 +1,47 @@
+{
+  "name": "ai-content-generator",
+  "version": "1.0.0",
+  "description": "AI-powered content generation for flashcards using local language models",
+  "author": "FlashGenie Team",
+  "license": "MIT",
+  "flashgenie_version": ">=1.7.0",
+  "type": "ai_enhancement",
+  "entry_point": "AIContentGeneratorPlugin",
+  "permissions": ["deck_read", "deck_write", "user_data"],
+  "dependencies": [],
+  "settings_schema": {
+    "model_type": {
+      "type": "string",
+      "enum": ["local", "offline", "simple"],
+      "default": "simple",
+      "description": "Type of AI model to use"
+    },
+    "creativity_level": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "default": 0.7,
+      "description": "Creativity level for content generation (0.0 = conservative, 1.0 = creative)"
+    },
+    "max_cards_per_batch": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50,
+      "default": 10,
+      "description": "Maximum number of cards to generate in one batch"
+    },
+    "include_explanations": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include explanations with generated content"
+    },
+    "difficulty_adaptation": {
+      "type": "boolean",
+      "default": true,
+      "description": "Adapt content difficulty to user's level"
+    }
+  },
+  "homepage": "https://github.com/himent12/FlashGenie",
+  "repository": "https://github.com/himent12/FlashGenie",
+  "tags": ["ai", "content-generation", "machine-learning", "official"]
+}
