@@ -239,4 +239,4 @@ This release establishes FlashGenie as a premier intelligent learning platform t
 
 ---
 
-*For more details about any release, see the [documentation](docs_v1.5/) or [GitHub releases](https://github.com/himent12/FlashGenie/releases).*
+*For more details about any release, see the [documentation](docs/) or [GitHub releases](https://github.com/himent12/FlashGenie/releases).*

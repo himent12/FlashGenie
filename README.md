@@ -219,15 +219,15 @@ FlashGenie v1.5 is built on proven cognitive science research:
 ## 📚 **Documentation**
 
 ### **Complete Documentation**
-- **[User Guide](docs_v1.5/user-guide/)**: Comprehensive learning paths for all users
-- **[Developer Guide](docs_v1.5/developer-guide/)**: API reference and contribution guidelines
-- **[Learning Science](docs_v1.5/learning-science/)**: Research foundation and effectiveness
+- **[User Guide](docs/user-guide/)**: Comprehensive learning paths for all users
+- **[Developer Guide](docs/developer-guide/)**: API reference and contribution guidelines
+- **[Learning Science](docs/learning-science/)**: Research foundation and effectiveness
 
 ### **Quick References**
-- **[Getting Started](docs_v1.5/user-guide/getting-started.md)**: Step-by-step setup and first use
-- **[Smart Features](docs_v1.5/user-guide/smart-features.md)**: AI-powered capabilities
-- **[Advanced Usage](docs_v1.5/user-guide/advanced-usage.md)**: Power-user techniques
-- **[API Reference](docs_v1.5/developer-guide/api-reference.md)**: Complete technical documentation
+- **[Getting Started](docs/user-guide/getting-started.md)**: Step-by-step setup and first use
+- **[Smart Features](docs/user-guide/smart-features.md)**: AI-powered capabilities
+- **[Advanced Usage](docs/user-guide/advanced-usage.md)**: Power-user techniques
+- **[API Reference](docs/developer-guide/api-reference.md)**: Complete technical documentation
 
 ## 🤝 **Contributing**
 
