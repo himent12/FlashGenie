@@ -36,6 +36,9 @@ python -m flashgenie --version
 
 ### **Your First Deck**
 ```bash
+# Get help with beautiful Rich Terminal UI
+python -m flashgenie help
+
 # Import flashcards from CSV
 python -m flashgenie import my_cards.csv --name "My First Deck"
 
@@ -44,6 +47,21 @@ python -m flashgenie list
 
 # Start learning
 python -m flashgenie quiz "My First Deck"
+```
+
+### **Getting Help**
+```bash
+# Comprehensive help system with Rich UI
+python -m flashgenie help
+
+# Get help for specific commands
+python -m flashgenie help import
+
+# Search for commands
+python -m flashgenie search quiz
+
+# Browse commands by category
+python -m flashgenie help deck_management
 ```
 
 ### **Example CSV Format**
@@ -57,6 +75,33 @@ Who wrote Romeo and Juliet?,Shakespeare,"literature,drama",0.5
 ## 🎨 **Rich Terminal Interface**
 
 FlashGenie v1.8.3 features a revolutionary Rich Terminal UI that transforms the command-line experience:
+
+## 🆘 **Comprehensive Help System**
+
+FlashGenie includes an advanced help system with Rich Terminal UI that makes command discovery intuitive and accessible:
+
+### **Smart Help Features**
+- 🔍 **Searchable Commands** - Find any command with fuzzy search
+- 📋 **Categorized Reference** - Commands organized by functionality
+- 💡 **Contextual Help** - Relevant suggestions based on your task
+- 🎨 **Rich Formatting** - Beautiful panels, tables, and syntax highlighting
+- ♿ **Accessibility Support** - Screen reader compatible with ARIA-like markup
+- 🎯 **Interactive Navigation** - Keyboard navigation and live search
+
+### **Help Commands**
+```bash
+# Main help menu with categories and quick start
+python -m flashgenie help
+
+# Detailed help for any command
+python -m flashgenie help import
+
+# Search commands by name or description
+python -m flashgenie search accessibility
+
+# Browse commands by category
+python -m flashgenie help developer
+```
 
 ### **Beautiful Deck Listings**
 ```

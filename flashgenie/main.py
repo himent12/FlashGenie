@@ -8,6 +8,7 @@ for the FlashGenie flashcard application.
 import sys
 import logging
 from pathlib import Path
+from flashgenie import __version__
 
 from flashgenie.interfaces.cli.argument_parser import create_argument_parser
 from flashgenie.interfaces.cli.command_dispatcher import CommandDispatcher
@@ -31,7 +32,7 @@ def main():
         setup_logging(log_level)
         logger = logging.getLogger(__name__)
 
-        logger.info(f"Starting FlashGenie v1.8.3")
+        logger.info(f"Starting FlashGenie v{__version__}")
         logger.debug(f"Command: {getattr(args, 'command', 'unknown')}")
 
         # Validate environment

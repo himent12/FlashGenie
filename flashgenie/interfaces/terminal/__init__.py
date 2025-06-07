@@ -20,6 +20,7 @@ from .debug_console import DebugConsole
 from .search_system import FuzzySearchEngine, InteractiveSearchInterface
 from .accessibility import AccessibilityManager
 from .performance_optimizer import PerformanceOptimizer
+from .help_system import HelpSystem
 
 __all__ = [
     "RichTerminalUI",
@@ -32,7 +33,8 @@ __all__ = [
     "FuzzySearchEngine",
     "InteractiveSearchInterface",
     "AccessibilityManager",
-    "PerformanceOptimizer"
+    "PerformanceOptimizer",
+    "HelpSystem"
 ]
 
 # Version info

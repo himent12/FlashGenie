@@ -5,6 +5,11 @@ This module routes CLI commands to their appropriate handlers.
 """
 
 from flashgenie.interfaces.cli.handlers.core_handlers import (
+    handle_help_command,
+    handle_search_command,
+    handle_accessibility_command,
+    handle_debug_command,
+    handle_performance_command,
     handle_import_command,
     handle_quiz_command,
     handle_list_command,
@@ -33,6 +38,13 @@ class CommandDispatcher:
     def __init__(self):
         """Initialize the command dispatcher."""
         self.command_map = {
+            # Help and utility commands
+            'help': handle_help_command,
+            'search': handle_search_command,
+            'accessibility': handle_accessibility_command,
+            'debug': handle_debug_command,
+            'performance': handle_performance_command,
+
             # Core commands
             'import': handle_import_command,
             'quiz': handle_quiz_command,

@@ -127,6 +127,10 @@ class SecurityValidator:
         if kwargs.get('check_xss', True):
             self._check_xss_patterns(value)
         
+        # Check for SQL injection patterns
+        if kwargs.get('check_sql_injection', True):
+            self._check_sql_injection_patterns(value)
+        
         # Sanitize if requested
         if kwargs.get('sanitize', False):
             value = self._sanitize_string(value)
