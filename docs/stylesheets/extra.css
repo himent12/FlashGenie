@@ -1,0 +1,331 @@
+/* FlashGenie Documentation Custom Styles */
+
+/* Root variables for consistent theming */
+:root {
+  --fg-primary: #673ab7;
+  --fg-primary-light: #9c27b0;
+  --fg-accent: #e91e63;
+  --fg-success: #4caf50;
+  --fg-warning: #ff9800;
+  --fg-error: #f44336;
+  --fg-info: #2196f3;
+  --fg-gradient: linear-gradient(135deg, #673ab7 0%, #9c27b0 100%);
+}
+
+/* Enhanced hero section */
+.md-typeset h1 {
+  background: var(--fg-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+}
+
+/* Feature cards styling */
+.grid.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.grid.cards > * {
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.grid.cards > *:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(103, 58, 183, 0.15);
+  border-color: var(--fg-primary);
+}
+
+/* Command code blocks */
+.md-typeset code {
+  background: var(--md-code-bg-color);
+  border-radius: 0.25rem;
+  padding: 0.2em 0.4em;
+  font-size: 0.85em;
+}
+
+.md-typeset pre code {
+  background: transparent;
+  padding: 0;
+}
+
+/* Enhanced admonitions */
+.md-typeset .admonition.tip {
+  border-color: var(--fg-success);
+}
+
+.md-typeset .admonition.tip > .admonition-title {
+  background-color: rgba(76, 175, 80, 0.1);
+  border-color: var(--fg-success);
+}
+
+.md-typeset .admonition.info {
+  border-color: var(--fg-info);
+}
+
+.md-typeset .admonition.info > .admonition-title {
+  background-color: rgba(33, 150, 243, 0.1);
+  border-color: var(--fg-info);
+}
+
+.md-typeset .admonition.warning {
+  border-color: var(--fg-warning);
+}
+
+.md-typeset .admonition.warning > .admonition-title {
+  background-color: rgba(255, 152, 0, 0.1);
+  border-color: var(--fg-warning);
+}
+
+.md-typeset .admonition.success {
+  border-color: var(--fg-success);
+}
+
+.md-typeset .admonition.success > .admonition-title {
+  background-color: rgba(76, 175, 80, 0.1);
+  border-color: var(--fg-success);
+}
+
+/* Command output styling */
+.command-output {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  font-family: 'Roboto Mono', monospace;
+  margin: 1rem 0;
+  border-left: 4px solid var(--fg-primary);
+}
+
+.command-output .success {
+  color: #4caf50;
+}
+
+.command-output .error {
+  color: #f44336;
+}
+
+.command-output .warning {
+  color: #ff9800;
+}
+
+.command-output .info {
+  color: #2196f3;
+}
+
+/* Progress indicators */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--md-default-fg-color--lightest);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 1rem 0;
+}
+
+.progress-bar .progress {
+  height: 100%;
+  background: var(--fg-gradient);
+  transition: width 0.3s ease;
+}
+
+/* Feature comparison tables */
+.md-typeset table {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.md-typeset table th {
+  background: var(--fg-gradient);
+  color: white;
+  font-weight: 600;
+}
+
+.md-typeset table tr:nth-child(even) {
+  background: rgba(103, 58, 183, 0.05);
+}
+
+/* Interactive elements */
+.interactive-demo {
+  background: var(--md-code-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  position: relative;
+}
+
+.interactive-demo::before {
+  content: "🎮 Interactive Demo";
+  position: absolute;
+  top: -10px;
+  left: 1rem;
+  background: var(--fg-primary);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Keyboard shortcuts */
+.kbd {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: var(--md-default-fg-color--lightest);
+  border: 1px solid var(--md-default-fg-color--lighter);
+  border-radius: 0.25rem;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.8em;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Difficulty level indicators */
+.difficulty-easy {
+  color: var(--fg-success);
+  font-weight: 600;
+}
+
+.difficulty-medium {
+  color: var(--fg-warning);
+  font-weight: 600;
+}
+
+.difficulty-hard {
+  color: var(--fg-error);
+  font-weight: 600;
+}
+
+/* Statistics display */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.stat-card {
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--fg-primary);
+  display: block;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--md-default-fg-color--light);
+  margin-top: 0.5rem;
+}
+
+/* Command palette styling */
+.command-palette {
+  background: var(--md-default-bg-color);
+  border: 2px solid var(--fg-primary);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.command-palette .prompt {
+  color: var(--fg-primary);
+  font-weight: 600;
+}
+
+.command-palette .command {
+  color: var(--md-default-fg-color);
+}
+
+.command-palette .output {
+  color: var(--md-default-fg-color--light);
+  margin-left: 1rem;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+  .grid.cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Dark mode adjustments */
+[data-md-color-scheme="slate"] {
+  --fg-primary: #9c27b0;
+  --fg-primary-light: #ba68c8;
+}
+
+[data-md-color-scheme="slate"] .grid.cards > * {
+  background: var(--md-default-bg-color);
+  border-color: var(--md-default-fg-color--lightest);
+}
+
+[data-md-color-scheme="slate"] .command-output {
+  background: #0d1117;
+  border-left-color: var(--fg-primary);
+}
+
+/* Animation for interactive elements */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Highlight important sections */
+.highlight-box {
+  background: linear-gradient(135deg, rgba(103, 58, 183, 0.1) 0%, rgba(156, 39, 176, 0.1) 100%);
+  border-left: 4px solid var(--fg-primary);
+  padding: 1.5rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+  margin: 1.5rem 0;
+}
+
+/* Version badges */
+.version-badge {
+  display: inline-block;
+  background: var(--fg-primary);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+/* Feature status indicators */
+.status-implemented {
+  color: var(--fg-success);
+}
+
+.status-planned {
+  color: var(--fg-warning);
+}
+
+.status-experimental {
+  color: var(--fg-info);
+}

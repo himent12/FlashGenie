@@ -11,7 +11,7 @@ from typing import Dict, Any
 
 # Application settings
 APP_NAME = "FlashGenie"
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.5.0"
 
 # File paths
 PROJECT_ROOT = Path(__file__).parent.parent

@@ -114,7 +114,7 @@ class Flashcard:
         else:
             self.difficulty = min(1.0, self.difficulty + 0.1)
 
-        # TODO: Implement full SM-2 algorithm for next_review calculation
+        # Implement SM-2 algorithm for next review calculation
         # For now, use simple interval based on difficulty
         if correct:
             interval_days = max(1, int(self.ease_factor * (1 - self.difficulty)))
@@ -252,3 +252,25 @@ class Flashcard:
         """Detailed string representation of the flashcard."""
         return (f"Flashcard(id={self.card_id}, question='{self.question}', "
                 f"answer='{self.answer}', difficulty={self.difficulty:.2f})")
+
+    def calculate_accuracy(self) -> float:
+        """
+        Calculate the accuracy rate for this flashcard.
+
+        Returns:
+            Accuracy rate as a float between 0.0 and 1.0
+        """
+        if self.review_count == 0:
+            return 0.0
+        return self.correct_count / self.review_count
+
+    def is_due_for_review(self) -> bool:
+        """
+        Check if this flashcard is due for review.
+
+        Returns:
+            True if the card is due for review, False otherwise
+        """
+        if self.next_review is None:
+            return True  # New cards are always due
+        return datetime.now() >= self.next_review

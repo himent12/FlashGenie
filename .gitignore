@@ -37,14 +37,37 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# User data
+# User data and FlashGenie specific
 data/decks/*.json
 data/sessions/*.csv
 data/exports/*
 data/imports/*
+data/backups/*
+data/achievements/*.json
+data/velocity_tracking/*
+data/knowledge_graph/*
+data/content_recommendations/*
+data/contextual_learning/*
+data/study_planning/*
+data/*.json
 
 # Logs
 *.log
+data/*.log
 
 # Environment variables
 .env
+
+# Documentation build
+site/
+docs/site/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.orig
+
+# Test files
+test_*.py
+*_test.py

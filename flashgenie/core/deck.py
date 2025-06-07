@@ -216,6 +216,10 @@ class Deck:
             return collection.get_cards(self)
         return []
 
+    def get_due_cards(self) -> List[Flashcard]:
+        """Get all cards that are due for review."""
+        return [card for card in self.flashcards if card.is_due_for_review()]
+
     def get_difficulty_distribution(self) -> Dict[str, int]:
         """Get distribution of cards by difficulty level."""
         distribution = {"easy": 0, "medium": 0, "hard": 0}
