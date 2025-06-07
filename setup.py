@@ -10,7 +10,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 setup(
     name="flashgenie",
-    version="1.8.2",
+    version="1.8.3",
     author="FlashGenie Team",
     author_email="huckflower@gmail.com",
     description="Intelligent flashcard application with adaptive spaced repetition and smart tagging",

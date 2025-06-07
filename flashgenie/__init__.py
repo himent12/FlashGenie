@@ -1,10 +1,14 @@
 """
-FlashGenie v1.8.2 - Intelligent Flashcard Application
+FlashGenie v1.8.3 - Revolutionary Rich Terminal Interface
 
 An advanced flashcard application with adaptive spaced repetition algorithms,
-smart difficulty adjustment, and intelligent tagging for optimized learning.
+smart difficulty adjustment, and world-class Rich Terminal UI.
 
 Features:
+- Revolutionary Rich Terminal Interface with professional design
+- Comprehensive accessibility support (screen readers, high contrast, audio)
+- Interactive widgets and advanced developer tools
+- Real-time performance monitoring and optimization
 - Smart difficulty auto-adjustment based on performance
 - Hierarchical tagging with auto-categorization
 - Smart collections for dynamic card grouping
@@ -16,7 +20,7 @@ Features:
 - Achievement system
 """
 
-__version__ = "1.8.2"
+__version__ = "1.8.3"
 __author__ = "FlashGenie Team"
 __email__ = "huckflower@gmail.com"
 
