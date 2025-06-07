@@ -59,3 +59,33 @@ class UnsupportedFormatError(ImportError):
 class CorruptedDataError(StorageError):
     """Raised when stored data is corrupted or invalid."""
     pass
+
+
+class PluginError(FlashGenieError):
+    """Raised when plugin operations fail."""
+    pass
+
+
+class ContextAnalysisError(FlashGenieError):
+    """Raised when context analysis operations fail."""
+    pass
+
+
+class PatternAnalysisError(FlashGenieError):
+    """Raised when pattern analysis operations fail."""
+    pass
+
+
+class InsightGenerationError(FlashGenieError):
+    """Raised when insight generation operations fail."""
+    pass
+
+
+class SecurityError(FlashGenieError):
+    """Raised when security violations are detected."""
+    pass
+
+
+class PermissionError(FlashGenieError):
+    """Raised when permission checks fail."""
+    pass
