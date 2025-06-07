@@ -132,7 +132,22 @@ def handle_import_command(args)
     pdk_parser.add_argument('--output', help='Output directory (for package)')
     pdk_parser.add_argument('--test-mode', choices=['basic', 'detailed', 'comprehensive'],
                            default='basic', help='Test mode (for test)')
-    pdk_parser.set_defaults(func=handle_pdk_command) -> None:
+    pdk_parser.set_defaults(func=handle_pdk_command)
+
+    # Plugin Marketplace
+    marketplace_parser = subparsers.add_parser('marketplace', help='Plugin marketplace - discover and install community plugins')
+    marketplace_parser.add_argument('action', choices=['search', 'featured', 'install', 'rate', 'recommendations', 'stats'],
+                                   help='Marketplace action to perform')
+    marketplace_parser.add_argument('--query', help='Search query (for search)')
+    marketplace_parser.add_argument('--type', choices=['importer', 'exporter', 'theme', 'quiz_mode', 'ai_enhancement', 'analytics', 'integration'],
+                                   help='Plugin type filter (for search)')
+    marketplace_parser.add_argument('--name', help='Plugin name (for install/rate)')
+    marketplace_parser.add_argument('--rating', type=float, help='Rating 1.0-5.0 (for rate)')
+    marketplace_parser.add_argument('--review', help='Review text (for rate)')
+    marketplace_parser.add_argument('--user-id', help='User ID (for rate)')
+    marketplace_parser.add_argument('--free-only', action='store_true', help='Show only free plugins (for search)')
+    marketplace_parser.add_argument('--min-rating', type=float, default=0.0, help='Minimum rating filter (for search)')
+    marketplace_parser.set_defaults(func=handle_marketplace_command) -> None:
     """Handle the import command."""
     from flashgenie.data.importers.csv_importer import CSVImporter
     from flashgenie.data.importers.txt_importer import TXTImporter
@@ -1126,6 +1141,154 @@ def handle_pdk_command(args) -> None:
 
     except FlashGenieError as e:
         print(f"PDK operation failed: {e}")
+        sys.exit(1)
+
+
+def handle_marketplace_command(args) -> None:
+    """Handle the marketplace command."""
+    from flashgenie.core.plugin_manager import PluginManager
+    from flashgenie.core.plugin_system import PluginType
+    from flashgenie.utils.exceptions import FlashGenieError
+
+    try:
+        plugin_manager = PluginManager()
+
+        if args.action == 'search':
+            # Search marketplace
+            query = args.query or ""
+            filters = {}
+
+            if args.type:
+                try:
+                    filters['plugin_type'] = PluginType(args.type)
+                except ValueError:
+                    print(f"Error: Invalid plugin type: {args.type}")
+                    sys.exit(1)
+
+            if args.free_only:
+                filters['free_only'] = True
+
+            if args.min_rating:
+                filters['min_rating'] = args.min_rating
+
+            print(f"🔍 Searching marketplace: '{query}'")
+            results = plugin_manager.search_marketplace(query, **filters)
+
+            if not results:
+                print("No plugins found matching your criteria.")
+                return
+
+            print(f"\n📦 **Found {len(results)} plugins:**")
+            print("=" * 60)
+
+            for plugin in results:
+                price_str = "Free" if plugin.price == 0.0 else f"${plugin.price:.2f}"
+                rating_str = f"⭐ {plugin.stats.average_rating:.1f}" if plugin.stats.total_ratings > 0 else "No ratings"
+                verified_str = "✅ Verified" if plugin.verified else ""
+
+                print(f"\n📌 **{plugin.manifest.name}** v{plugin.manifest.version}")
+                print(f"   {plugin.manifest.description}")
+                print(f"   Author: {plugin.manifest.author} | Type: {plugin.manifest.plugin_type.value}")
+                print(f"   {rating_str} | Downloads: {plugin.stats.downloads} | {price_str} {verified_str}")
+
+                if plugin.manifest.tags:
+                    print(f"   Tags: {', '.join(plugin.manifest.tags)}")
+
+        elif args.action == 'featured':
+            # Get featured plugins
+            print("🌟 **Featured Plugins**")
+            print("=" * 50)
+
+            featured = plugin_manager.get_featured_plugins()
+
+            if not featured:
+                print("No featured plugins available.")
+                return
+
+            for plugin in featured:
+                print(f"\n⭐ **{plugin.manifest.name}** v{plugin.manifest.version}")
+                print(f"   {plugin.manifest.description}")
+                print(f"   Author: {plugin.manifest.author}")
+                print(f"   Rating: ⭐ {plugin.stats.average_rating:.1f} | Downloads: {plugin.stats.downloads}")
+
+        elif args.action == 'install':
+            # Install from marketplace
+            if not args.name:
+                print("Error: Plugin name required for install action")
+                sys.exit(1)
+
+            print(f"📦 Installing plugin from marketplace: {args.name}")
+
+            if plugin_manager.install_from_marketplace(args.name):
+                print(f"✅ Successfully installed plugin: {args.name}")
+                print(f"💡 Enable with: python -m flashgenie plugins enable {args.name}")
+            else:
+                print(f"❌ Failed to install plugin: {args.name}")
+                sys.exit(1)
+
+        elif args.action == 'rate':
+            # Rate plugin
+            if not all([args.name, args.rating, args.review, args.user_id]):
+                print("Error: Plugin name, rating, review, and user-id required for rate action")
+                sys.exit(1)
+
+            if not (1.0 <= args.rating <= 5.0):
+                print("Error: Rating must be between 1.0 and 5.0")
+                sys.exit(1)
+
+            print(f"⭐ Rating plugin: {args.name}")
+
+            if plugin_manager.rate_plugin(args.name, args.rating, args.review, args.user_id):
+                print(f"✅ Successfully rated plugin: {args.name} ({args.rating}/5.0)")
+            else:
+                print(f"❌ Failed to rate plugin: {args.name}")
+                sys.exit(1)
+
+        elif args.action == 'recommendations':
+            # Get recommendations
+            print("💡 **Plugin Recommendations**")
+            print("=" * 50)
+
+            recommendations = plugin_manager.get_plugin_recommendations()
+
+            if not recommendations:
+                print("No recommendations available. Install more plugins to get personalized recommendations.")
+                return
+
+            for plugin in recommendations:
+                print(f"\n🎯 **{plugin.manifest.name}** v{plugin.manifest.version}")
+                print(f"   {plugin.manifest.description}")
+                print(f"   Type: {plugin.manifest.plugin_type.value} | Author: {plugin.manifest.author}")
+                print(f"   Rating: ⭐ {plugin.stats.average_rating:.1f} | Downloads: {plugin.stats.downloads}")
+
+                if plugin.manifest.tags:
+                    print(f"   Tags: {', '.join(plugin.manifest.tags)}")
+
+        elif args.action == 'stats':
+            # Show marketplace statistics
+            print("📊 **Marketplace Statistics**")
+            print("=" * 50)
+
+            stats = plugin_manager.marketplace.get_marketplace_stats()
+
+            print(f"Total Plugins: {stats['total_plugins']}")
+            print(f"Total Downloads: {stats['total_downloads']:,}")
+            print(f"Average Rating: ⭐ {stats['average_rating']:.1f}")
+            print(f"Featured Plugins: {stats['featured_count']}")
+            print(f"Free Plugins: {stats['free_plugins']}")
+            print(f"Paid Plugins: {stats['paid_plugins']}")
+
+            print(f"\n📈 **Plugin Types:**")
+            for plugin_type, count in stats['plugin_types'].items():
+                print(f"   {plugin_type}: {count}")
+
+        else:
+            print(f"Unknown marketplace action: {args.action}")
+            print("Available actions: search, featured, install, rate, recommendations, stats")
+            sys.exit(1)
+
+    except FlashGenieError as e:
+        print(f"Marketplace operation failed: {e}")
         sys.exit(1)
 
 

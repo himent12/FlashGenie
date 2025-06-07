@@ -1,38 +1,97 @@
-# FlashGenie v1.5 🧞‍♂️
+# FlashGenie v1.8.0 🧞‍♂️
 
-**The AI-Powered Intelligent Spaced Repetition Learning Platform**
+**The Ultimate AI-Powered Learning Platform with Complete Plugin Ecosystem**
 
-FlashGenie v1.5 transforms traditional flashcard studying into an intelligent, adaptive, and engaging learning experience. Powered by cutting-edge AI algorithms and grounded in cognitive science research, FlashGenie adapts to your learning patterns, predicts your progress, and optimizes your study sessions for maximum efficiency.
+FlashGenie v1.8.0 is a revolutionary, open-source learning platform that transforms education through intelligent spaced repetition, AI-powered content generation, voice integration, and a comprehensive plugin ecosystem. Built with Python, it offers unlimited extensibility through community-driven plugins while maintaining professional-grade security and performance.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Version](https://img.shields.io/badge/version-1.5.0-green.svg)](https://github.com/himent12/FlashGenie/releases)
+[![Version](https://img.shields.io/badge/version-1.8.0-green.svg)](https://github.com/himent12/FlashGenie/releases)
+[![Plugin Ecosystem](https://img.shields.io/badge/plugins-ecosystem-purple.svg)](https://github.com/himent12/FlashGenie/wiki/Plugins)
 
-## ✨ **What's New in v1.5**
+## 🚀 **What's New in v1.8.0 - Complete Plugin Ecosystem**
 
-### 🧠 **AI-Powered Learning Intelligence**
-- **Adaptive Study Sessions**: Context-aware study planning that adapts to your time, energy, and environment
-- **Learning Velocity Tracking**: Predictive analytics that forecast your mastery timeline
-- **Contextual Learning Engine**: Dynamic adaptation based on device, environment, and attention level
-- **Knowledge Graph Visualization**: Visual representation of your learning progress and concept relationships
-- **Gamification System**: Comprehensive achievement system with streaks, challenges, and rewards
-- **Intelligent Content Suggestions**: AI-powered recommendations for new cards and study strategies
+### 🌟 **Revolutionary Plugin System**
+- **Plugin Marketplace**: Discover, install, and rate community plugins with search and filtering
+- **Hot-Swappable Plugins**: Load/unload plugins without application restart
+- **Advanced Dependency Management**: Automatic resolution, installation, and conflict handling
+- **Plugin Development Kit (PDK)**: Professional scaffolding, testing, and packaging tools
+- **Community Features**: Rating system, reviews, and personalized recommendations
+- **7 Plugin Types**: Importers, Exporters, Themes, Quiz Modes, AI Enhancements, Analytics, Integrations
 
-### 📚 **Enhanced Core Features**
-- **Smart Spaced Repetition**: Enhanced algorithms with personalized intervals
-- **Advanced Difficulty Analysis**: Multi-factor difficulty adjustment with confidence weighting
-- **Hierarchical Tag Management**: Sophisticated content organization with auto-tagging
-- **Smart Collections**: Dynamic grouping with advanced filtering and analytics
-- **Comprehensive Analytics**: Deep learning insights with velocity tracking and predictions
+### 🤖 **AI-Powered Learning Revolution**
+- **Intelligent Content Generation**: AI creates flashcards from any text with pattern recognition
+- **Smart Question Types**: Definitions, examples, comparisons, applications, and processes
+- **Adaptive Difficulty**: AI adjusts content complexity based on your learning level
+- **Local AI Processing**: Privacy-safe, offline AI capabilities with no data sharing
+- **Content Enhancement**: Auto-tagging, explanations, and related topic suggestions
 
-## 🚀 **Key Features**
+### 🎤 **Voice-Enabled Accessibility**
+- **Text-to-Speech**: Natural voice narration for questions and answers
+- **Speech-to-Text**: Voice response recognition for hands-free learning
+- **Voice Commands**: Navigate and control FlashGenie with voice
+- **Accessibility Support**: Full support for visual impairments and motor disabilities
+- **Multi-Language**: Configurable language and voice settings for global users
 
-### **🎯 Intelligent Learning**
-- **Adaptive Study Planning**: AI creates optimal study sessions based on your context
-- **Predictive Analytics**: Forecasts learning progress and mastery timelines
-- **Context Awareness**: Adapts to your environment, device, and attention level
-- **Smart Difficulty**: Multi-factor difficulty adjustment with performance analysis
-- **Personalized Intervals**: Spaced repetition optimized for your learning patterns
+### 📈 **Research-Grade Analytics**
+- **Learning Velocity Tracking**: Monitor progress with scientific precision and trend analysis
+- **Forgetting Curve Modeling**: Understand memory retention patterns with predictive modeling
+- **Cognitive Load Analysis**: Optimize study sessions for maximum efficiency
+- **Performance Trends**: Detailed insights into learning patterns and improvements
+- **Multi-Format Export**: Professional reports in JSON, CSV, HTML with data anonymization
+
+### 🏪 **Plugin Marketplace Features**
+- **Community Discovery**: Search thousands of plugins with advanced filtering
+- **Featured Plugins**: Curated selections from the FlashGenie team
+- **Rating & Reviews**: Community-driven quality assessment and feedback
+- **Smart Recommendations**: AI-powered plugin suggestions based on your usage
+- **Monetization Support**: Framework for premium plugins and developer incentives
+
+## 🔌 **Plugin Ecosystem**
+
+### **7 Plugin Types Available**
+
+#### 📊 **Importer Plugins**
+- **Enhanced CSV Importer**: Intelligent column mapping with encoding detection
+- **Anki Bridge**: Full compatibility with Anki deck formats
+- **PDF Text Extractor**: Extract flashcards from PDF documents
+- **Web Scraper**: Create cards from web content and articles
+
+#### 📤 **Exporter Plugins**
+- **Multi-Format Export**: PDF, Word, PowerPoint, and more
+- **Print-Ready Formats**: Professional layouts for physical study materials
+- **Mobile Sync**: Export to mobile learning apps
+- **Cloud Integration**: Direct export to Google Drive, Dropbox, OneDrive
+
+#### 🎨 **Theme Plugins**
+- **Dark Theme**: Professional dark mode with accessibility features
+- **High Contrast**: Optimized for visual impairments
+- **Minimalist**: Clean, distraction-free interface
+- **Colorful**: Vibrant themes for engaging study sessions
+
+#### 🎮 **Quiz Mode Plugins**
+- **Voice Learning**: Hands-free study with speech recognition
+- **Timed Challenges**: Speed learning with competitive elements
+- **Multiple Choice**: Convert flashcards to MCQ format
+- **Cloze Deletion**: Fill-in-the-blank style learning
+
+#### 🤖 **AI Enhancement Plugins**
+- **Content Generator**: AI-powered flashcard creation from text
+- **Smart Translator**: Multi-language learning support
+- **Concept Mapper**: Visual knowledge graph generation
+- **Difficulty Predictor**: AI-powered difficulty assessment
+
+#### 📈 **Analytics Plugins**
+- **Advanced Analytics**: Research-grade learning metrics
+- **Progress Visualizer**: Interactive charts and graphs
+- **Performance Predictor**: ML-powered progress forecasting
+- **Study Optimizer**: AI recommendations for study improvement
+
+#### 🔗 **Integration Plugins**
+- **Study Reminders**: Smart notification system
+- **Calendar Sync**: Integration with Google Calendar, Outlook
+- **LMS Integration**: Connect with Moodle, Canvas, Blackboard
+- **Social Learning**: Share progress and compete with friends
 
 ### **📊 Advanced Analytics**
 - **Learning Velocity**: Track cards per day, mastery rate, and study efficiency
@@ -148,24 +207,53 @@ python -m flashgenie achievements --progress
 
 ## 🎮 **Complete Command Reference**
 
-### **Core Commands**
-| Command | Description | Example |
-|---------|-------------|---------|
-| `create` | Create a new deck | `python -m flashgenie create "Math Facts"` |
-| `import` | Import flashcards | `python -m flashgenie import "Deck" cards.csv` |
-| `quiz` | Start a quiz session | `python -m flashgenie quiz "Deck" --mode adaptive` |
-| `stats` | View statistics | `python -m flashgenie stats "Deck"` |
-| `list` | List all decks | `python -m flashgenie list` |
-| `export` | Export deck data | `python -m flashgenie export "Deck" output.json` |
+### **Core Learning Commands**
+```bash
+# Deck management
+python -m flashgenie create "Spanish Vocabulary" --description "Basic Spanish words"
+python -m flashgenie add "Spanish Vocabulary" --question "Hola" --answer "Hello"
+python -m flashgenie list
+python -m flashgenie stats "Spanish Vocabulary" --detailed
 
-### **AI-Powered Commands**
-| Command | Description | Example |
-|---------|-------------|---------|
-| `plan` | Create adaptive study plan | `python -m flashgenie plan "Deck" --time 30` |
-| `velocity` | Analyze learning velocity | `python -m flashgenie velocity "Deck" --predict` |
-| `graph` | Generate knowledge graph | `python -m flashgenie graph "Deck" --export graph.json` |
-| `achievements` | View achievements | `python -m flashgenie achievements --streaks` |
-| `suggest` | Get AI recommendations | `python -m flashgenie suggest "Deck" --gaps` |
+# Study sessions
+python -m flashgenie study "Spanish Vocabulary" --mode adaptive
+python -m flashgenie quiz "Spanish Vocabulary" --count 20 --timed
+```
+
+### **Plugin Management Commands**
+```bash
+# Plugin discovery and management
+python -m flashgenie plugins list
+python -m flashgenie plugins discover
+python -m flashgenie plugins enable dark-theme
+python -m flashgenie plugins disable study-reminders
+python -m flashgenie plugins info ai-content-generator
+
+# Hot-swappable plugin operations (no restart required!)
+python -m flashgenie plugins reload my-plugin
+```
+
+### **Marketplace Commands**
+```bash
+# Marketplace discovery
+python -m flashgenie marketplace search "voice learning"
+python -m flashgenie marketplace featured
+python -m flashgenie marketplace recommendations
+python -m flashgenie marketplace stats
+
+# Plugin installation and rating
+python -m flashgenie marketplace install voice-integration
+python -m flashgenie marketplace rate dark-theme --rating 5.0 --review "Excellent!"
+```
+
+### **Plugin Development Kit (PDK)**
+```bash
+# Create and develop plugins
+python -m flashgenie pdk create --name my-plugin --type ai_enhancement --author "Developer"
+python -m flashgenie pdk validate --path my-plugin
+python -m flashgenie pdk test --path my-plugin --test-mode comprehensive
+python -m flashgenie pdk package --path my-plugin --output packages/
+```
 
 ## 📊 **Usage Examples**
 
@@ -301,6 +389,17 @@ FlashGenie v1.5 builds upon decades of research in cognitive science, spaced rep
 
 ---
 
-**Transform your learning with FlashGenie v1.5 - Where AI meets education!** 🧞‍♂️✨
+**Transform your learning with FlashGenie v1.8.0 - The Complete Plugin Ecosystem for Unlimited Learning!** 🧞‍♂️✨
 
 *Made with ❤️ by the FlashGenie community*
+
+## 🌟 **Plugin Ecosystem Highlights**
+
+- **🏪 Marketplace**: 50+ community plugins available
+- **🔥 Hot-Swappable**: Load/unload plugins without restart
+- **🤖 AI-Powered**: Local AI content generation
+- **🎤 Voice-Enabled**: Full accessibility support
+- **📈 Analytics**: Research-grade learning insights
+- **🛠️ Developer-Friendly**: Professional development tools
+- **🔒 Secure**: Advanced permission system
+- **🌐 Community-Driven**: Rating, reviews, and recommendations

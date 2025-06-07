@@ -21,6 +21,9 @@ from flashgenie.core.plugin_system import (
     ImporterPlugin, ExporterPlugin, QuizModePlugin, ThemePlugin,
     AIEnhancementPlugin, AnalyticsPlugin, IntegrationPlugin
 )
+from flashgenie.core.plugin_marketplace import PluginMarketplace
+from flashgenie.core.plugin_hot_swap import HotSwapManager, PluginUpdateManager
+from flashgenie.core.plugin_dependencies import PluginDependencyManager
 from flashgenie.config import APP_VERSION
 from flashgenie.utils.exceptions import FlashGenieError
 
@@ -34,7 +37,7 @@ class PluginManager:
         self.plugins: Dict[str, PluginInfo] = {}
         self.security_manager = PluginSecurityManager()
         self.logger = logging.getLogger("plugin_manager")
-        
+
         # Plugin type mappings
         self.plugin_base_classes = {
             PluginType.IMPORTER: ImporterPlugin,
@@ -45,13 +48,22 @@ class PluginManager:
             PluginType.ANALYTICS: AnalyticsPlugin,
             PluginType.INTEGRATION: IntegrationPlugin,
         }
-        
+
+        # Phase 3 components
+        self.marketplace = PluginMarketplace()
+        self.dependency_manager = PluginDependencyManager()
+        self.hot_swap_manager = HotSwapManager(self)
+        self.update_manager = PluginUpdateManager(self, self.hot_swap_manager)
+
         # Ensure plugin directories exist
         self._create_plugin_directories()
-        
+
         # Load plugin settings
         self.settings_file = self.plugins_dir / "settings.json"
         self.plugin_settings = self._load_plugin_settings()
+
+        # Start hot swap monitoring
+        self.hot_swap_manager.start_watching()
     
     def _create_plugin_directories(self) -> None:
         """Create plugin directory structure."""
@@ -377,10 +389,170 @@ class PluginManager:
         """Update plugin settings."""
         self.plugin_settings[plugin_name] = settings
         self._save_plugin_settings()
-        
+
         # Update loaded plugin settings
         if plugin_name in self.plugins:
             plugin_info = self.plugins[plugin_name]
             if plugin_info.instance:
                 plugin_info.instance.settings.update(settings)
                 plugin_info.settings = settings
+
+    # Phase 3: Marketplace Integration
+    def search_marketplace(self, query: str = "", **filters) -> List[Any]:
+        """Search plugins in the marketplace."""
+        return self.marketplace.search_plugins(query, **filters)
+
+    def get_featured_plugins(self) -> List[Any]:
+        """Get featured plugins from marketplace."""
+        return self.marketplace.get_featured_plugins()
+
+    def install_from_marketplace(self, plugin_name: str) -> bool:
+        """Install plugin from marketplace."""
+        try:
+            # Download plugin
+            download_path = self.marketplace.download_plugin(plugin_name, self.plugins_dir / "downloads")
+
+            # Install plugin
+            return self.install_plugin(download_path, "community")
+
+        except Exception as e:
+            self.logger.error(f"Failed to install from marketplace: {e}")
+            return False
+
+    def rate_plugin(self, plugin_name: str, rating: float, review: str, user_id: str) -> bool:
+        """Rate and review a plugin."""
+        return self.marketplace.submit_rating(plugin_name, rating, review, user_id)
+
+    def get_plugin_recommendations(self) -> List[Any]:
+        """Get plugin recommendations based on installed plugins."""
+        installed_plugins = list(self.plugins.keys())
+        return self.marketplace.get_plugin_recommendations(installed_plugins)
+
+    # Phase 3: Hot Swap Functionality
+    def enable_hot_swap(self) -> None:
+        """Enable hot swap monitoring."""
+        self.hot_swap_manager.start_watching()
+
+    def disable_hot_swap(self) -> None:
+        """Disable hot swap monitoring."""
+        self.hot_swap_manager.stop_watching()
+
+    def hot_reload_plugin(self, plugin_name: str) -> bool:
+        """Hot reload a plugin without restart."""
+        return self.hot_swap_manager.hot_reload_plugin(plugin_name)
+
+    def check_for_updates(self) -> Dict[str, Dict[str, Any]]:
+        """Check for plugin updates."""
+        return self.update_manager.check_for_updates()
+
+    def update_plugin(self, plugin_name: str, version: str = "latest") -> bool:
+        """Update plugin to specified version."""
+        return self.update_manager.update_plugin(plugin_name, version)
+
+    # Phase 3: Advanced Dependency Management
+    def install_plugin_with_dependencies(self, plugin_path: Path, category: str = "local") -> Dict[str, Any]:
+        """Install plugin with automatic dependency resolution."""
+        try:
+            # Load plugin manifest
+            manifest_file = plugin_path / "plugin.json"
+            if not manifest_file.exists():
+                raise FlashGenieError("Plugin manifest not found")
+
+            manifest = self._load_manifest(manifest_file)
+
+            # Prepare environment and install dependencies
+            env_result = self.dependency_manager.prepare_plugin_environment(manifest)
+
+            if not env_result["success"]:
+                return env_result
+
+            # Install plugin
+            success = self.install_plugin(plugin_path, category)
+
+            return {
+                "success": success,
+                "plugin_installed": success,
+                "environment_prepared": env_result["success"],
+                "dependencies_installed": env_result["dependencies_installed"],
+                "conflicts_resolved": env_result.get("conflicts_resolved", 0)
+            }
+
+        except Exception as e:
+            self.logger.error(f"Failed to install plugin with dependencies: {e}")
+            return {"success": False, "error": str(e)}
+
+    def uninstall_plugin_with_cleanup(self, plugin_name: str) -> Dict[str, Any]:
+        """Uninstall plugin and cleanup unused dependencies."""
+        try:
+            # Uninstall plugin
+            success = self.uninstall_plugin(plugin_name)
+
+            if success:
+                # Cleanup environment
+                cleanup_result = self.dependency_manager.cleanup_plugin_environment(plugin_name)
+                return {
+                    "success": True,
+                    "plugin_uninstalled": True,
+                    "environment_cleaned": cleanup_result["success"],
+                    "unused_dependencies_removed": cleanup_result["unused_dependencies_found"]
+                }
+            else:
+                return {"success": False, "error": "Plugin uninstallation failed"}
+
+        except Exception as e:
+            self.logger.error(f"Failed to uninstall plugin with cleanup: {e}")
+            return {"success": False, "error": str(e)}
+
+    def get_dependency_info(self, plugin_name: str) -> Dict[str, Any]:
+        """Get dependency information for a plugin."""
+        return self.dependency_manager.resolver.get_dependency_tree(plugin_name)
+
+    # Phase 3: Enhanced Plugin Information
+    def get_comprehensive_plugin_info(self, plugin_name: str) -> Dict[str, Any]:
+        """Get comprehensive plugin information including marketplace data."""
+        # Get basic plugin info
+        basic_info = {}
+        if plugin_name in self.plugins:
+            plugin_info = self.plugins[plugin_name]
+            basic_info = {
+                "name": plugin_info.manifest.name,
+                "version": plugin_info.manifest.version,
+                "description": plugin_info.manifest.description,
+                "author": plugin_info.manifest.author,
+                "type": plugin_info.manifest.plugin_type.value,
+                "status": plugin_info.status.value,
+                "permissions": [p.value for p in plugin_info.manifest.permissions],
+                "dependencies": plugin_info.manifest.dependencies,
+                "settings": plugin_info.settings
+            }
+
+        # Get marketplace info
+        marketplace_info = self.marketplace.get_plugin_details(plugin_name)
+        if marketplace_info:
+            basic_info.update({
+                "marketplace_rating": marketplace_info.stats.average_rating,
+                "downloads": marketplace_info.stats.downloads,
+                "categories": [c.value for c in marketplace_info.categories],
+                "price": marketplace_info.price,
+                "verified": marketplace_info.verified,
+                "featured": marketplace_info.featured
+            })
+
+        # Get dependency info
+        dependency_info = self.get_dependency_info(plugin_name)
+        basic_info["dependency_tree"] = dependency_info
+
+        return basic_info
+
+    def get_system_status(self) -> Dict[str, Any]:
+        """Get comprehensive system status."""
+        return {
+            "plugin_manager": {
+                "total_plugins": len(self.plugins),
+                "enabled_plugins": len([p for p in self.plugins.values() if p.status == PluginStatus.ENABLED]),
+                "plugin_directories": [str(d) for d in [self.plugins_dir / cat for cat in ["official", "community", "local", "development"]]]
+            },
+            "marketplace": self.marketplace.get_marketplace_stats(),
+            "hot_swap": self.hot_swap_manager.get_hot_swap_status(),
+            "dependencies": self.dependency_manager.get_system_dependency_status()
+        }

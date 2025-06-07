@@ -37,6 +37,10 @@ typing-extensions>=4.0.0
 # Plugin system dependencies
 schedule>=1.2.0             # For study reminder scheduling
 
+# Phase 3 dependencies for advanced features
+watchdog>=3.0.0             # For hot-swappable plugin monitoring
+requests>=2.28.0            # For marketplace API communication
+
 # Optional plugin dependencies
 # Uncomment as needed for specific plugins:
 pandas>=1.5.0               # For enhanced CSV importer plugin
