@@ -15,7 +15,7 @@ from enum import Enum
 import logging
 import re
 
-from flashgenie.core.plugin_system import PluginManifest
+from .plugin_system import PluginManifest
 from flashgenie.utils.exceptions import FlashGenieError
 
 

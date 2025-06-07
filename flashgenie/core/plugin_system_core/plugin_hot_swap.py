@@ -13,15 +13,25 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional, Callable
 from datetime import datetime
 import logging
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
+try:
+    from watchdog.observers import Observer
+    from watchdog.events import FileSystemEventHandler
+    WATCHDOG_AVAILABLE = True
+except ImportError:
+    Observer = None
+    FileSystemEventHandler = None
+    WATCHDOG_AVAILABLE = False
 
-from flashgenie.core.plugin_system import BasePlugin, PluginManifest, PluginInfo, PluginStatus
-from flashgenie.core.plugin_manager import PluginManager
+from .plugin_system import BasePlugin, PluginManifest, PluginInfo, PluginStatus
 from flashgenie.utils.exceptions import FlashGenieError
 
+# Forward reference to avoid circular import
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .plugin_manager import PluginManager
 
-class PluginWatcher(FileSystemEventHandler):
+
+class PluginWatcher(FileSystemEventHandler if WATCHDOG_AVAILABLE else object):
     """File system watcher for plugin changes."""
     
     def __init__(self, hot_swap_manager: 'HotSwapManager'):
@@ -66,7 +76,7 @@ class PluginWatcher(FileSystemEventHandler):
 class HotSwapManager:
     """Manages hot-swappable plugin operations."""
     
-    def __init__(self, plugin_manager: PluginManager):
+    def __init__(self, plugin_manager: 'PluginManager'):
         """Initialize hot swap manager."""
         self.plugin_manager = plugin_manager
         self.logger = logging.getLogger("hot_swap_manager")
@@ -100,16 +110,18 @@ class HotSwapManager:
     
     def start_watching(self) -> None:
         """Start watching plugin directories for changes."""
-        if not self.enabled or self.observer:
+        if not self.enabled or self.observer or not WATCHDOG_AVAILABLE:
+            if not WATCHDOG_AVAILABLE:
+                self.logger.warning("Watchdog not available, hot swap monitoring disabled")
             return
-        
+
         self.observer = Observer()
-        
+
         for watch_dir in self.watch_directories:
             if watch_dir.exists():
                 self.observer.schedule(self.watcher, str(watch_dir), recursive=True)
                 self.logger.info(f"Watching plugin directory: {watch_dir}")
-        
+
         self.observer.start()
         self.logger.info("Hot swap monitoring started")
     
@@ -378,7 +390,7 @@ class HotSwapManager:
 class PluginUpdateManager:
     """Manages plugin updates and version compatibility."""
     
-    def __init__(self, plugin_manager: PluginManager, hot_swap_manager: HotSwapManager):
+    def __init__(self, plugin_manager: 'PluginManager', hot_swap_manager: HotSwapManager):
         """Initialize update manager."""
         self.plugin_manager = plugin_manager
         self.hot_swap_manager = hot_swap_manager

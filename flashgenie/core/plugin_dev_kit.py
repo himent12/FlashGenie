@@ -1,678 +1,348 @@
 """
-FlashGenie Plugin Development Kit (PDK)
+Plugin Development Kit for FlashGenie.
 
-Provides tools and utilities for plugin developers to create, test, and package
-FlashGenie plugins with ease.
+This module provides the main PluginDevelopmentKit class that serves as the
+public interface for plugin development functionality.
 """
 
-import json
-import shutil
-import zipfile
 from pathlib import Path
-from typing import Dict, Any, List, Optional
-from datetime import datetime
-import tempfile
-import subprocess
-import sys
+from typing import Dict, Any, Optional, Set
 
-from flashgenie.core.plugin_system import PluginType, Permission
-from flashgenie.core.plugin_manager import PluginManager
+from .plugin_system import PluginType
+from .plugin_development.scaffolder import PluginScaffolder
+from .plugin_development.validator import PluginValidator
+from .plugin_development.tester import PluginTester
+from .plugin_development.packager import PluginPackager
 from flashgenie.utils.exceptions import FlashGenieError
 
 
 class PluginDevelopmentKit:
-    """Plugin Development Kit for creating and testing plugins."""
+    """
+    Main interface for plugin development functionality.
     
-    def __init__(self, workspace_dir: Optional[Path] = None):
-        """Initialize the PDK."""
-        self.workspace_dir = workspace_dir or Path("plugin_workspace")
-        self.templates_dir = Path(__file__).parent / "plugin_templates"
-        self.plugin_manager = PluginManager()
-        
-        # Ensure workspace exists
-        self.workspace_dir.mkdir(exist_ok=True)
+    This class provides a simplified interface to the plugin development
+    system while maintaining backward compatibility.
+    """
     
-    def create_plugin_scaffold(self, plugin_name: str, plugin_type: PluginType, 
-                             author: str = "Plugin Developer") -> Path:
-        """Create a new plugin scaffold with template files."""
-        print(f"🏗️ Creating plugin scaffold: {plugin_name}")
+    def __init__(self, workspace_dir: Optional[str] = None):
+        """
+        Initialize the Plugin Development Kit.
         
-        # Validate plugin name
-        if not plugin_name.replace("-", "").replace("_", "").isalnum():
-            raise FlashGenieError("Plugin name must contain only letters, numbers, hyphens, and underscores")
+        Args:
+            workspace_dir: Optional workspace directory for plugin development
+        """
+        self.workspace_dir = Path(workspace_dir or "plugins/development")
+        self.workspace_dir.mkdir(parents=True, exist_ok=True)
         
-        # Create plugin directory
-        plugin_dir = self.workspace_dir / plugin_name
-        if plugin_dir.exists():
-            raise FlashGenieError(f"Plugin directory already exists: {plugin_dir}")
-        
-        plugin_dir.mkdir(parents=True)
-        
-        # Generate plugin manifest
-        manifest = self._generate_manifest_template(plugin_name, plugin_type, author)
-        manifest_file = plugin_dir / "plugin.json"
-        with open(manifest_file, 'w') as f:
-            json.dump(manifest, f, indent=2)
-        
-        # Generate plugin code template
-        code_template = self._generate_code_template(plugin_name, plugin_type)
-        code_file = plugin_dir / "__init__.py"
-        with open(code_file, 'w') as f:
-            f.write(code_template)
-        
-        # Generate README
-        readme_content = self._generate_readme_template(plugin_name, plugin_type, author)
-        readme_file = plugin_dir / "README.md"
-        with open(readme_file, 'w') as f:
-            f.write(readme_content)
-        
-        # Generate test file
-        test_content = self._generate_test_template(plugin_name, plugin_type)
-        test_file = plugin_dir / "test_plugin.py"
-        with open(test_file, 'w') as f:
-            f.write(test_content)
-        
-        print(f"✅ Plugin scaffold created at: {plugin_dir}")
-        print(f"📝 Edit {manifest_file} to configure your plugin")
-        print(f"💻 Edit {code_file} to implement your plugin")
-        print(f"🧪 Run tests with: python {test_file}")
-        
-        return plugin_dir
+        # Initialize components
+        self.scaffolder = PluginScaffolder(self.workspace_dir)
+        self.validator = PluginValidator()
+        self.tester = PluginTester()
+        self.packager = PluginPackager()
     
-    def validate_plugin(self, plugin_dir: Path) -> Dict[str, Any]:
-        """Validate a plugin for compliance and best practices."""
-        print(f"🔍 Validating plugin: {plugin_dir}")
+    def create_plugin_scaffold(
+        self, 
+        plugin_name: str, 
+        plugin_type: PluginType, 
+        author: str = "Plugin Developer"
+    ) -> Path:
+        """
+        Create a complete plugin scaffold.
         
-        validation_results = {
-            "valid": True,
-            "errors": [],
-            "warnings": [],
-            "suggestions": []
+        Args:
+            plugin_name: Name of the plugin
+            plugin_type: Type of plugin to create
+            author: Plugin author name
+            
+        Returns:
+            Path to the created plugin directory
+        """
+        try:
+            return self.scaffolder.create_plugin_scaffold(plugin_name, plugin_type, author)
+        except Exception as e:
+            raise FlashGenieError(f"Failed to create plugin scaffold: {e}")
+    
+    def validate_plugin(self, plugin_path: Path) -> Dict[str, Any]:
+        """
+        Validate a plugin directory.
+        
+        Args:
+            plugin_path: Path to the plugin directory
+            
+        Returns:
+            Dictionary with validation results
+        """
+        try:
+            return self.validator.validate_plugin(plugin_path)
+        except Exception as e:
+            raise FlashGenieError(f"Failed to validate plugin: {e}")
+    
+    def test_plugin(self, plugin_path: Path, test_mode: str = "basic") -> Dict[str, Any]:
+        """
+        Test a plugin with the specified test mode.
+        
+        Args:
+            plugin_path: Path to the plugin directory
+            test_mode: Test mode (basic, detailed, comprehensive)
+            
+        Returns:
+            Dictionary with test results
+        """
+        try:
+            return self.tester.test_plugin(plugin_path, test_mode)
+        except Exception as e:
+            raise FlashGenieError(f"Failed to test plugin: {e}")
+    
+    def package_plugin(
+        self, 
+        plugin_path: Path, 
+        output_dir: Optional[Path] = None
+    ) -> Path:
+        """
+        Package a plugin for distribution.
+        
+        Args:
+            plugin_path: Path to the plugin directory
+            output_dir: Directory to save the package
+            
+        Returns:
+            Path to the created package file
+        """
+        try:
+            return self.packager.package_plugin(plugin_path, output_dir)
+        except Exception as e:
+            raise FlashGenieError(f"Failed to package plugin: {e}")
+    
+    def install_plugin_for_testing(self, plugin_path: Path) -> bool:
+        """
+        Install a plugin for testing purposes.
+        
+        Args:
+            plugin_path: Path to the plugin directory
+            
+        Returns:
+            True if installation successful
+        """
+        try:
+            # For testing, we can create a symlink or copy to the plugins directory
+            # This is a simplified implementation
+            test_plugins_dir = Path("plugins/testing")
+            test_plugins_dir.mkdir(parents=True, exist_ok=True)
+            
+            plugin_name = plugin_path.name
+            test_plugin_path = test_plugins_dir / plugin_name
+            
+            # Remove existing test installation
+            if test_plugin_path.exists():
+                import shutil
+                shutil.rmtree(test_plugin_path)
+            
+            # Copy plugin to test directory
+            import shutil
+            shutil.copytree(plugin_path, test_plugin_path)
+            
+            return True
+            
+        except Exception as e:
+            raise FlashGenieError(f"Failed to install plugin for testing: {e}")
+    
+    def get_plugin_template(self, plugin_type: PluginType) -> Dict[str, Any]:
+        """
+        Get a template for creating a specific type of plugin.
+        
+        Args:
+            plugin_type: Type of plugin
+            
+        Returns:
+            Dictionary with template information
+        """
+        templates = {
+            PluginType.IMPORTER: {
+                "description": "Import flashcard data from various file formats",
+                "required_methods": ["can_import", "import_data", "get_supported_formats"],
+                "permissions": ["file_read", "deck_write"],
+                "dependencies": ["pandas>=1.5.0"],
+                "example_usage": "Import CSV files with custom column mapping"
+            },
+            PluginType.EXPORTER: {
+                "description": "Export flashcard data to different formats",
+                "required_methods": ["can_export", "export_data", "get_supported_formats"],
+                "permissions": ["deck_read", "file_write"],
+                "dependencies": ["jinja2>=3.0.0"],
+                "example_usage": "Export decks to PDF with custom templates"
+            },
+            PluginType.THEME: {
+                "description": "Customize the visual appearance of FlashGenie",
+                "required_methods": ["get_theme_name", "apply_theme", "get_theme_info"],
+                "permissions": ["config_read"],
+                "dependencies": [],
+                "example_usage": "Apply dark theme with custom colors"
+            },
+            PluginType.QUIZ_MODE: {
+                "description": "Create custom study modes and quiz experiences",
+                "required_methods": ["get_mode_name", "create_session", "get_settings_schema"],
+                "permissions": ["deck_read", "user_data"],
+                "dependencies": [],
+                "example_usage": "Timed quiz mode with leaderboards"
+            },
+            PluginType.AI_ENHANCEMENT: {
+                "description": "Add AI-powered features and content generation",
+                "required_methods": ["get_ai_capabilities", "process_content", "get_model_info"],
+                "permissions": ["deck_read", "deck_write", "network"],
+                "dependencies": ["requests>=2.28.0"],
+                "example_usage": "Generate flashcards from text using AI"
+            },
+            PluginType.ANALYTICS: {
+                "description": "Provide advanced learning analytics and insights",
+                "required_methods": ["generate_insights", "get_metrics", "export_data"],
+                "permissions": ["deck_read", "user_data"],
+                "dependencies": ["matplotlib>=3.5.0", "numpy>=1.21.0"],
+                "example_usage": "Learning progress visualization and predictions"
+            },
+            PluginType.INTEGRATION: {
+                "description": "Integrate with external services and platforms",
+                "required_methods": ["get_service_name", "authenticate", "sync_data"],
+                "permissions": ["network", "system_integration"],
+                "dependencies": ["requests>=2.28.0"],
+                "example_usage": "Sync with Google Drive or Notion"
+            }
         }
         
-        # Check required files
-        required_files = ["plugin.json", "__init__.py"]
-        for file_name in required_files:
-            file_path = plugin_dir / file_name
-            if not file_path.exists():
-                validation_results["errors"].append(f"Missing required file: {file_name}")
-                validation_results["valid"] = False
-        
-        if not validation_results["valid"]:
-            return validation_results
-        
-        # Validate manifest
-        try:
-            with open(plugin_dir / "plugin.json", 'r') as f:
-                manifest = json.load(f)
-            
-            manifest_validation = self._validate_manifest(manifest)
-            validation_results["errors"].extend(manifest_validation["errors"])
-            validation_results["warnings"].extend(manifest_validation["warnings"])
-            
-            if manifest_validation["errors"]:
-                validation_results["valid"] = False
-        
-        except Exception as e:
-            validation_results["errors"].append(f"Invalid plugin.json: {e}")
-            validation_results["valid"] = False
-        
-        # Validate Python code
-        try:
-            code_validation = self._validate_python_code(plugin_dir / "__init__.py")
-            validation_results["warnings"].extend(code_validation["warnings"])
-            validation_results["suggestions"].extend(code_validation["suggestions"])
-        
-        except Exception as e:
-            validation_results["errors"].append(f"Python code validation failed: {e}")
-            validation_results["valid"] = False
-        
-        # Security checks
-        security_check = self._perform_security_check(plugin_dir)
-        validation_results["warnings"].extend(security_check["warnings"])
-        
-        # Best practices check
-        best_practices = self._check_best_practices(plugin_dir)
-        validation_results["suggestions"].extend(best_practices["suggestions"])
-        
-        return validation_results
+        return templates.get(plugin_type, {
+            "description": "Custom FlashGenie plugin",
+            "required_methods": [],
+            "permissions": [],
+            "dependencies": [],
+            "example_usage": "Extend FlashGenie functionality"
+        })
     
-    def test_plugin(self, plugin_dir: Path, test_mode: str = "basic") -> Dict[str, Any]:
-        """Test a plugin in isolated environment."""
-        print(f"🧪 Testing plugin: {plugin_dir}")
+    def get_development_guidelines(self) -> Dict[str, Any]:
+        """
+        Get plugin development guidelines and best practices.
         
-        test_results = {
-            "success": True,
-            "tests_run": 0,
-            "tests_passed": 0,
-            "tests_failed": 0,
-            "errors": [],
-            "output": []
+        Returns:
+            Dictionary with development guidelines
+        """
+        return {
+            "file_structure": {
+                "required": ["plugin.json", "__init__.py"],
+                "recommended": ["README.md", "test_plugin.py", "LICENSE"],
+                "optional": ["CHANGELOG.md", "docs/", "examples/"]
+            },
+            "coding_standards": {
+                "style": "Follow PEP 8 style guidelines",
+                "documentation": "Add docstrings to all public methods",
+                "type_hints": "Use type hints for better code clarity",
+                "error_handling": "Handle errors gracefully with proper exceptions"
+            },
+            "security": {
+                "permissions": "Request only necessary permissions",
+                "validation": "Validate all user inputs",
+                "secrets": "Never hardcode API keys or passwords",
+                "safe_operations": "Avoid dangerous operations like eval() or exec()"
+            },
+            "testing": {
+                "unit_tests": "Write unit tests for all functionality",
+                "integration_tests": "Test integration with FlashGenie",
+                "performance_tests": "Ensure reasonable performance",
+                "security_tests": "Test for security vulnerabilities"
+            },
+            "distribution": {
+                "versioning": "Use semantic versioning (e.g., 1.0.0)",
+                "documentation": "Provide clear installation and usage instructions",
+                "licensing": "Include appropriate license file",
+                "packaging": "Use the PDK packaging tools"
+            }
         }
-        
-        try:
-            # Load plugin in test environment
-            temp_plugins_dir = Path(tempfile.mkdtemp())
-            test_plugin_dir = temp_plugins_dir / "test" / plugin_dir.name
-            test_plugin_dir.parent.mkdir(parents=True)
-            shutil.copytree(plugin_dir, test_plugin_dir)
-            
-            # Initialize plugin manager with test directory
-            test_plugin_manager = PluginManager(temp_plugins_dir)
-            
-            # Discover and load plugin
-            discovered = test_plugin_manager.discover_plugins()
-            if plugin_dir.name not in discovered:
-                test_results["success"] = False
-                test_results["errors"].append("Plugin not discovered")
-                return test_results
-            
-            # Test plugin loading
-            test_results["tests_run"] += 1
-            if test_plugin_manager.load_plugin(plugin_dir.name):
-                test_results["tests_passed"] += 1
-                test_results["output"].append("✅ Plugin loaded successfully")
-            else:
-                test_results["tests_failed"] += 1
-                test_results["errors"].append("Failed to load plugin")
-                test_results["success"] = False
-            
-            # Test plugin functionality
-            if test_mode in ["detailed", "comprehensive"]:
-                plugin_instance = test_plugin_manager.get_plugin(plugin_dir.name)
-                if plugin_instance:
-                    func_test_results = self._test_plugin_functionality(plugin_instance)
-                    test_results["tests_run"] += func_test_results["tests_run"]
-                    test_results["tests_passed"] += func_test_results["tests_passed"]
-                    test_results["tests_failed"] += func_test_results["tests_failed"]
-                    test_results["output"].extend(func_test_results["output"])
-                    
-                    if func_test_results["tests_failed"] > 0:
-                        test_results["success"] = False
-            
-            # Test plugin unloading
-            test_results["tests_run"] += 1
-            if test_plugin_manager.unload_plugin(plugin_dir.name):
-                test_results["tests_passed"] += 1
-                test_results["output"].append("✅ Plugin unloaded successfully")
-            else:
-                test_results["tests_failed"] += 1
-                test_results["errors"].append("Failed to unload plugin")
-                test_results["success"] = False
-            
-            # Cleanup
-            shutil.rmtree(temp_plugins_dir, ignore_errors=True)
-        
-        except Exception as e:
-            test_results["success"] = False
-            test_results["errors"].append(f"Test execution failed: {e}")
-        
-        return test_results
     
-    def package_plugin(self, plugin_dir: Path, output_dir: Optional[Path] = None) -> Path:
-        """Package a plugin for distribution."""
-        print(f"📦 Packaging plugin: {plugin_dir}")
+    def get_plugin_examples(self) -> Dict[str, str]:
+        """
+        Get examples of different plugin types.
         
-        # Validate plugin first
-        validation = self.validate_plugin(plugin_dir)
-        if not validation["valid"]:
-            raise FlashGenieError(f"Plugin validation failed: {validation['errors']}")
-        
-        # Determine output location
-        output_dir = output_dir or self.workspace_dir / "packages"
-        output_dir.mkdir(exist_ok=True)
-        
-        # Create package filename
-        with open(plugin_dir / "plugin.json", 'r') as f:
-            manifest = json.load(f)
-        
-        package_name = f"{manifest['name']}-{manifest['version']}.zip"
-        package_path = output_dir / package_name
-        
-        # Create ZIP package
-        with zipfile.ZipFile(package_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            for file_path in plugin_dir.rglob('*'):
-                if file_path.is_file() and not file_path.name.startswith('.'):
-                    arcname = file_path.relative_to(plugin_dir)
-                    zipf.write(file_path, arcname)
-        
-        print(f"✅ Plugin packaged: {package_path}")
-        return package_path
+        Returns:
+            Dictionary mapping plugin types to example descriptions
+        """
+        return {
+            "importer": "CSV Importer - Import flashcards from CSV files with custom column mapping",
+            "exporter": "PDF Exporter - Export decks to beautifully formatted PDF files",
+            "theme": "Dark Theme - Professional dark mode theme with accessibility features",
+            "quiz_mode": "Speed Quiz - Timed quiz mode with performance tracking",
+            "ai_enhancement": "Content Generator - AI-powered flashcard generation from text",
+            "analytics": "Learning Insights - Advanced analytics with progress predictions",
+            "integration": "Google Drive Sync - Synchronize decks with Google Drive"
+        }
     
-    def install_plugin_for_testing(self, plugin_dir: Path) -> bool:
-        """Install plugin in development category for testing."""
-        try:
-            return self.plugin_manager.install_plugin(plugin_dir, "development")
-        except Exception as e:
-            print(f"❌ Failed to install plugin for testing: {e}")
-            return False
-    
-    def _generate_manifest_template(self, plugin_name: str, plugin_type: PluginType, 
-                                  author: str) -> Dict[str, Any]:
-        """Generate plugin manifest template."""
-        # Determine default permissions based on plugin type
-        default_permissions = {
-            PluginType.IMPORTER: ["file_read", "deck_write"],
-            PluginType.EXPORTER: ["deck_read", "file_write"],
-            PluginType.THEME: [],
-            PluginType.QUIZ_MODE: ["deck_read", "user_data"],
-            PluginType.AI_ENHANCEMENT: ["deck_read", "deck_write", "user_data"],
-            PluginType.ANALYTICS: ["deck_read", "user_data"],
-            PluginType.INTEGRATION: ["user_data", "system_integration"]
-        }.get(plugin_type, [])
+    def get_workspace_info(self) -> Dict[str, Any]:
+        """
+        Get information about the development workspace.
+        
+        Returns:
+            Dictionary with workspace information
+        """
+        # Count plugins in workspace
+        plugin_dirs = [d for d in self.workspace_dir.iterdir() 
+                      if d.is_dir() and (d / "plugin.json").exists()]
+        
+        # Categorize by status
+        valid_plugins = []
+        invalid_plugins = []
+        
+        for plugin_dir in plugin_dirs:
+            try:
+                validation = self.validate_plugin(plugin_dir)
+                if validation["valid"]:
+                    valid_plugins.append(plugin_dir.name)
+                else:
+                    invalid_plugins.append(plugin_dir.name)
+            except Exception:
+                invalid_plugins.append(plugin_dir.name)
         
         return {
-            "name": plugin_name,
-            "version": "1.0.0",
-            "description": f"A {plugin_type.value} plugin for FlashGenie",
-            "author": author,
-            "license": "MIT",
-            "flashgenie_version": ">=1.7.0",
-            "type": plugin_type.value,
-            "entry_point": f"{self._to_class_name(plugin_name)}Plugin",
-            "permissions": default_permissions,
-            "dependencies": [],
-            "settings_schema": {
-                "enabled": {
-                    "type": "boolean",
-                    "default": True,
-                    "description": "Enable this plugin"
-                }
-            },
-            "homepage": "https://github.com/your-username/your-plugin",
-            "repository": "https://github.com/your-username/your-plugin",
-            "tags": [plugin_type.value, "community"]
+            "workspace_path": str(self.workspace_dir),
+            "total_plugins": len(plugin_dirs),
+            "valid_plugins": valid_plugins,
+            "invalid_plugins": invalid_plugins,
+            "plugin_count_by_status": {
+                "valid": len(valid_plugins),
+                "invalid": len(invalid_plugins)
+            }
         }
     
-    def _to_class_name(self, plugin_name: str) -> str:
-        """Convert plugin name to class name."""
-        # Convert kebab-case or snake_case to PascalCase
-        parts = plugin_name.replace("-", "_").split("_")
-        return "".join(word.capitalize() for word in parts)
-    
-    def _generate_code_template(self, plugin_name: str, plugin_type: PluginType) -> str:
-        """Generate plugin code template."""
-        class_name = f"{self._to_class_name(plugin_name)}Plugin"
+    def cleanup_workspace(self) -> Dict[str, Any]:
+        """
+        Clean up the development workspace.
         
-        # Base class mapping
-        base_classes = {
-            PluginType.IMPORTER: "ImporterPlugin",
-            PluginType.EXPORTER: "ExporterPlugin",
-            PluginType.THEME: "ThemePlugin",
-            PluginType.QUIZ_MODE: "QuizModePlugin",
-            PluginType.AI_ENHANCEMENT: "AIEnhancementPlugin",
-            PluginType.ANALYTICS: "AnalyticsPlugin",
-            PluginType.INTEGRATION: "IntegrationPlugin"
+        Returns:
+            Dictionary with cleanup results
+        """
+        cleanup_results = {
+            "files_removed": 0,
+            "directories_removed": 0,
+            "space_freed": 0,
+            "errors": []
         }
-        
-        base_class = base_classes.get(plugin_type, "BasePlugin")
-        
-        template = f'''"""
-{plugin_name.replace("-", " ").replace("_", " ").title()} Plugin for FlashGenie
-
-TODO: Add plugin description here.
-"""
-
-from typing import Dict, Any, List, Optional
-from flashgenie.core.plugin_system import {base_class}
-
-
-class {class_name}({base_class}):
-    """{plugin_name.replace("-", " ").replace("_", " ").title()} plugin implementation."""
-    
-    def initialize(self) -> None:
-        """Initialize the plugin."""
-        # TODO: Add any required permission checks
-        # self.require_permission(Permission.DECK_READ)
-        
-        self.logger.info("{plugin_name} plugin initialized")
-        
-        # TODO: Initialize plugin resources here
-    
-    def cleanup(self) -> None:
-        """Cleanup plugin resources."""
-        self.logger.info("{plugin_name} plugin cleaned up")
-        
-        # TODO: Cleanup plugin resources here
-'''
-
-        # Add plugin-type specific methods
-        if plugin_type == PluginType.IMPORTER:
-            template += '''
-    def can_import(self, file_path) -> bool:
-        """Check if this plugin can import the given file."""
-        # TODO: Implement file format detection
-        return False
-    
-    def import_data(self, file_path, deck_name: str) -> Dict[str, Any]:
-        """Import data from file and return import results."""
-        # TODO: Implement data import logic
-        return {"success": False, "error": "Not implemented"}
-    
-    def get_supported_formats(self) -> List[str]:
-        """Get list of supported file formats."""
-        # TODO: Return list of supported file extensions
-        return []
-'''
-        elif plugin_type == PluginType.THEME:
-            template += '''
-    def get_theme_name(self) -> str:
-        """Get the name of this theme."""
-        return "{plugin_name.replace("-", " ").replace("_", " ").title()}"
-    
-    def apply_theme(self) -> Dict[str, Any]:
-        """Apply theme and return theme configuration."""
-        # TODO: Implement theme application logic
-        return {{
-            "name": "{plugin_name}",
-            "colors": {{
-                "background": "#ffffff",
-                "text": "#000000"
-            }}
-        }}
-    
-    def get_theme_info(self) -> Dict[str, Any]:
-        """Get theme information and preview."""
-        return {{
-            "name": self.get_theme_name(),
-            "description": "TODO: Add theme description",
-            "features": ["TODO: List theme features"]
-        }}
-'''
-        elif plugin_type == PluginType.AI_ENHANCEMENT:
-            template += '''
-    def get_ai_capabilities(self) -> List[str]:
-        """Get list of AI capabilities this plugin provides."""
-        # TODO: Return list of AI capabilities
-        return []
-    
-    def process_content(self, content: str, task: str, **kwargs) -> Dict[str, Any]:
-        """Process content using AI capabilities."""
-        # TODO: Implement AI content processing
-        return {"error": "Not implemented"}
-    
-    def get_model_info(self) -> Dict[str, Any]:
-        """Get information about the AI model used."""
-        return {{
-            "model_type": "custom",
-            "version": "1.0.0",
-            "capabilities": self.get_ai_capabilities()
-        }}
-'''
-
-        return template
-    
-    def _generate_readme_template(self, plugin_name: str, plugin_type: PluginType, 
-                                author: str) -> str:
-        """Generate README template."""
-        return f'''# {plugin_name.replace("-", " ").replace("_", " ").title()}
-
-A {plugin_type.value} plugin for FlashGenie.
-
-## Description
-
-TODO: Add detailed description of what this plugin does.
-
-## Features
-
-- TODO: List plugin features
-- TODO: Add more features
-
-## Installation
-
-1. Package the plugin:
-   ```bash
-   python -m flashgenie.core.plugin_dev_kit package {plugin_name}
-   ```
-
-2. Install the plugin:
-   ```bash
-   python -m flashgenie plugins install {plugin_name}-1.0.0.zip
-   ```
-
-3. Enable the plugin:
-   ```bash
-   python -m flashgenie plugins enable {plugin_name}
-   ```
-
-## Configuration
-
-TODO: Document plugin settings and configuration options.
-
-## Usage
-
-TODO: Provide usage examples and instructions.
-
-## Development
-
-### Testing
-
-Run the plugin tests:
-```bash
-python test_plugin.py
-```
-
-### Contributing
-
-TODO: Add contribution guidelines.
-
-## License
-
-MIT License - see LICENSE file for details.
-
-## Author
-
-{author}
-'''
-    
-    def _generate_test_template(self, plugin_name: str, plugin_type: PluginType) -> str:
-        """Generate test template."""
-        class_name = f"{self._to_class_name(plugin_name)}Plugin"
-        
-        return f'''#!/usr/bin/env python3
-"""
-Test script for {plugin_name} plugin.
-"""
-
-import sys
-import json
-from pathlib import Path
-
-# Add FlashGenie to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-from flashgenie.core.plugin_system import PluginManifest
-from {plugin_name.replace("-", "_")} import {class_name}
-
-
-def test_plugin_initialization():
-    """Test plugin initialization."""
-    print("Testing plugin initialization...")
-    
-    # Load manifest
-    with open("plugin.json", "r") as f:
-        manifest_data = json.load(f)
-    
-    manifest = PluginManifest.from_dict(manifest_data)
-    
-    # Create plugin instance
-    plugin = {class_name}(manifest, {{}})
-    
-    try:
-        plugin.initialize()
-        print("✅ Plugin initialized successfully")
-        
-        # Test plugin info
-        info = plugin.get_info()
-        print(f"Plugin info: {{info}}")
-        
-        plugin.cleanup()
-        print("✅ Plugin cleaned up successfully")
-        
-        return True
-    except Exception as e:
-        print(f"❌ Plugin test failed: {{e}}")
-        return False
-
-
-def test_plugin_functionality():
-    """Test plugin-specific functionality."""
-    print("Testing plugin functionality...")
-    
-    # TODO: Add plugin-specific tests here
-    
-    return True
-
-
-def main():
-    """Run all tests."""
-    print(f"🧪 Testing {plugin_name} plugin")
-    print("=" * 50)
-    
-    tests = [
-        test_plugin_initialization,
-        test_plugin_functionality
-    ]
-    
-    passed = 0
-    total = len(tests)
-    
-    for test in tests:
-        if test():
-            passed += 1
-        print()
-    
-    print(f"Test Results: {{passed}}/{{total}} passed")
-    
-    if passed == total:
-        print("🎉 All tests passed!")
-        return 0
-    else:
-        print("❌ Some tests failed!")
-        return 1
-
-
-if __name__ == "__main__":
-    sys.exit(main())
-'''
-    
-    def _validate_manifest(self, manifest: Dict[str, Any]) -> Dict[str, List[str]]:
-        """Validate plugin manifest."""
-        errors = []
-        warnings = []
-        
-        # Required fields
-        required_fields = ["name", "version", "description", "author", "license", 
-                          "flashgenie_version", "type", "entry_point"]
-        
-        for field in required_fields:
-            if field not in manifest:
-                errors.append(f"Missing required field: {field}")
-        
-        # Validate plugin type
-        if "type" in manifest:
-            try:
-                PluginType(manifest["type"])
-            except ValueError:
-                errors.append(f"Invalid plugin type: {manifest['type']}")
-        
-        # Validate permissions
-        if "permissions" in manifest:
-            for perm in manifest["permissions"]:
-                try:
-                    Permission(perm)
-                except ValueError:
-                    warnings.append(f"Unknown permission: {perm}")
-        
-        return {"errors": errors, "warnings": warnings}
-    
-    def _validate_python_code(self, code_file: Path) -> Dict[str, List[str]]:
-        """Validate Python code."""
-        warnings = []
-        suggestions = []
         
         try:
-            with open(code_file, 'r') as f:
-                code = f.read()
+            import shutil
             
-            # Basic syntax check
-            compile(code, str(code_file), 'exec')
+            # Remove temporary files
+            temp_patterns = ["*.tmp", "*.temp", "*.log", "__pycache__"]
             
-            # Check for common issues
-            if "TODO" in code:
-                suggestions.append("Remove TODO comments before release")
+            for pattern in temp_patterns:
+                for temp_file in self.workspace_dir.rglob(pattern):
+                    try:
+                        if temp_file.is_file():
+                            size = temp_file.stat().st_size
+                            temp_file.unlink()
+                            cleanup_results["files_removed"] += 1
+                            cleanup_results["space_freed"] += size
+                        elif temp_file.is_dir():
+                            shutil.rmtree(temp_file)
+                            cleanup_results["directories_removed"] += 1
+                    except Exception as e:
+                        cleanup_results["errors"].append(f"Failed to remove {temp_file}: {e}")
             
-            if "print(" in code and "self.logger" in code:
-                suggestions.append("Consider using logger instead of print statements")
-        
-        except SyntaxError as e:
-            warnings.append(f"Syntax error: {e}")
-        
-        return {"warnings": warnings, "suggestions": suggestions}
-    
-    def _perform_security_check(self, plugin_dir: Path) -> Dict[str, List[str]]:
-        """Perform basic security checks."""
-        warnings = []
-        
-        # Check for potentially dangerous imports
-        dangerous_imports = ["os", "subprocess", "sys", "shutil", "socket"]
-        
-        for py_file in plugin_dir.glob("*.py"):
-            try:
-                with open(py_file, 'r') as f:
-                    content = f.read()
-                
-                for dangerous in dangerous_imports:
-                    if f"import {dangerous}" in content or f"from {dangerous}" in content:
-                        warnings.append(f"Potentially dangerous import in {py_file.name}: {dangerous}")
-            
-            except Exception:
-                pass
-        
-        return {"warnings": warnings}
-    
-    def _check_best_practices(self, plugin_dir: Path) -> Dict[str, List[str]]:
-        """Check for best practices compliance."""
-        suggestions = []
-        
-        # Check for README
-        if not (plugin_dir / "README.md").exists():
-            suggestions.append("Add a README.md file with plugin documentation")
-        
-        # Check for tests
-        test_files = list(plugin_dir.glob("test*.py"))
-        if not test_files:
-            suggestions.append("Add test files to verify plugin functionality")
-        
-        # Check for license
-        if not (plugin_dir / "LICENSE").exists():
-            suggestions.append("Add a LICENSE file")
-        
-        return {"suggestions": suggestions}
-    
-    def _test_plugin_functionality(self, plugin_instance) -> Dict[str, Any]:
-        """Test plugin-specific functionality."""
-        results = {
-            "tests_run": 0,
-            "tests_passed": 0,
-            "tests_failed": 0,
-            "output": []
-        }
-        
-        # Test get_info method
-        results["tests_run"] += 1
-        try:
-            info = plugin_instance.get_info()
-            if isinstance(info, dict) and "name" in info:
-                results["tests_passed"] += 1
-                results["output"].append("✅ get_info() method works correctly")
-            else:
-                results["tests_failed"] += 1
-                results["output"].append("❌ get_info() returned invalid data")
         except Exception as e:
-            results["tests_failed"] += 1
-            results["output"].append(f"❌ get_info() failed: {e}")
+            cleanup_results["errors"].append(f"Cleanup failed: {e}")
         
-        # TODO: Add more plugin-type specific tests
-        
-        return results
+        return cleanup_results

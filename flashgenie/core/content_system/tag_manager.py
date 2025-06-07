@@ -12,8 +12,8 @@ from collections import defaultdict, Counter
 import json
 from pathlib import Path
 
-from flashgenie.core.flashcard import Flashcard
-from flashgenie.core.deck import Deck
+from .flashcard import Flashcard
+from .deck import Deck
 from flashgenie.config import DATA_DIR
 
 

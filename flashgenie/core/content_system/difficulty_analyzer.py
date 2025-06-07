@@ -11,7 +11,7 @@ from dataclasses import dataclass
 import statistics
 from enum import Enum
 
-from flashgenie.core.flashcard import Flashcard
+from .flashcard import Flashcard
 
 
 class ConfidenceLevel(Enum):

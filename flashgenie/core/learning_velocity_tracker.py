@@ -1,647 +1,495 @@
 """
-Learning Velocity Tracker for FlashGenie v1.5
+Learning Velocity Tracker for FlashGenie.
 
-This module implements advanced analytics that track learning velocity, predict mastery
-timelines, and identify optimal learning paths for individual users.
+This module provides the main LearningVelocityTracker class that serves as the
+public interface for learning velocity tracking functionality.
 """
 
+from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Tuple, Any
-from dataclasses import dataclass, field
-from enum import Enum
-import json
-import math
-import statistics
-from pathlib import Path
 
-from flashgenie.core.flashcard import Flashcard
-from flashgenie.core.deck import Deck
-
-
-class LearningPhase(Enum):
-    """Different phases of learning progression."""
-    INITIAL = "initial"  # First exposure to material
-    ACQUISITION = "acquisition"  # Active learning phase
-    CONSOLIDATION = "consolidation"  # Strengthening knowledge
-    MASTERY = "mastery"  # Deep understanding achieved
-    MAINTENANCE = "maintenance"  # Maintaining learned knowledge
-
-
-class VelocityTrend(Enum):
-    """Trends in learning velocity."""
-    ACCELERATING = "accelerating"
-    STEADY = "steady"
-    DECELERATING = "decelerating"
-    PLATEAUED = "plateaued"
-    DECLINING = "declining"
-
-
-@dataclass
-class LearningMetrics:
-    """Core learning metrics for velocity calculation."""
-    cards_learned: int = 0
-    cards_mastered: int = 0
-    total_reviews: int = 0
-    study_time_minutes: int = 0
-    accuracy_rate: float = 0.0
-    retention_rate: float = 0.0
-    difficulty_progression: float = 0.0
-    consistency_score: float = 0.0
-
-
-@dataclass
-class VelocitySnapshot:
-    """Snapshot of learning velocity at a specific time."""
-    timestamp: datetime
-    cards_per_day: float
-    mastery_per_day: float
-    accuracy_trend: float
-    difficulty_trend: float
-    study_efficiency: float  # cards learned per minute
-    retention_strength: float
-    phase: LearningPhase
-
-
-@dataclass
-class MasteryPrediction:
-    """Prediction of when mastery will be achieved."""
-    estimated_days_to_mastery: int
-    confidence_interval: Tuple[int, int]  # (min_days, max_days)
-    confidence_score: float  # 0.0 to 1.0
-    recommended_daily_time: int  # minutes
-    bottleneck_cards: List[Flashcard]
-    acceleration_opportunities: List[str]
-    risk_factors: List[str]
-
-
-@dataclass
-class LearningPath:
-    """Optimal learning path recommendation."""
-    path_id: str
-    description: str
-    estimated_duration: int  # days
-    daily_commitment: int  # minutes
-    milestones: List[Dict[str, Any]]
-    difficulty_progression: List[float]
-    success_probability: float
+from .learning_velocity.models import (
+    LearningSession, VelocityGoal, LearningVelocityProfile
+)
+from .learning_velocity.tracker import VelocityTracker
+from .learning_velocity.analyzer import VelocityAnalyzer
+from flashgenie.utils.exceptions import FlashGenieError
 
 
 class LearningVelocityTracker:
     """
-    Advanced analytics system for tracking learning velocity and predicting outcomes.
+    Main interface for learning velocity tracking functionality.
     
-    This tracker analyzes learning patterns to:
-    - Calculate current learning velocity
-    - Predict mastery timelines
-    - Identify optimal learning paths
-    - Detect learning plateaus and bottlenecks
-    - Recommend acceleration strategies
+    This class provides a simplified interface to the learning velocity
+    system while maintaining backward compatibility.
     """
     
     def __init__(self, data_path: Optional[str] = None):
-        self.data_path = Path(data_path or "data/velocity_tracking")
-        self.data_path.mkdir(parents=True, exist_ok=True)
-        
-        # Load historical data
-        self.velocity_history = self._load_velocity_history()
-        self.learning_curves = self._load_learning_curves()
-        self.mastery_models = self._load_mastery_models()
-    
-    def calculate_current_velocity(self, deck: Deck, days_back: int = 30) -> VelocitySnapshot:
         """
-        Calculate current learning velocity based on recent performance.
+        Initialize the learning velocity tracker.
         
         Args:
-            deck: The deck to analyze
-            days_back: Number of days to look back for calculation
+            data_path: Optional path for storing velocity data
+        """
+        self.tracker = VelocityTracker(data_path)
+        self.analyzer = VelocityAnalyzer()
+        self.current_session: Optional[Dict[str, Any]] = None
+    
+    def start_session(self, user_id: str, deck_id: str = "", study_mode: str = "review") -> str:
+        """
+        Start a new learning session.
+        
+        Args:
+            user_id: User identifier
+            deck_id: Deck being studied
+            study_mode: Type of study session
             
         Returns:
-            Current velocity snapshot
+            Session ID
         """
-        cutoff_date = datetime.now() - timedelta(days=days_back)
+        session_id = f"session_{user_id}_{datetime.now().isoformat()}"
         
-        # Gather recent performance data
-        recent_cards = [
-            card for card in deck.flashcards
-            if card.last_reviewed and card.last_reviewed >= cutoff_date
-        ]
+        self.current_session = {
+            "session_id": session_id,
+            "user_id": user_id,
+            "deck_id": deck_id,
+            "study_mode": study_mode,
+            "start_time": datetime.now(),
+            "cards_studied": 0,
+            "correct_answers": 0,
+            "total_answers": 0,
+            "difficulty_levels": []
+        }
         
-        if not recent_cards:
-            return self._create_empty_velocity_snapshot()
-        
-        # Calculate velocity metrics
-        cards_per_day = len(recent_cards) / days_back
-        mastery_per_day = len([c for c in recent_cards if self._is_mastered(c)]) / days_back
-        
-        # Calculate trends
-        accuracy_trend = self._calculate_accuracy_trend(recent_cards)
-        difficulty_trend = self._calculate_difficulty_trend(recent_cards)
-        
-        # Calculate efficiency
-        total_study_time = sum(
-            len(card.response_times) * statistics.mean(card.response_times) / 60
-            for card in recent_cards if card.response_times
-        )
-        study_efficiency = len(recent_cards) / max(total_study_time, 1)
-        
-        # Calculate retention strength
-        retention_strength = self._calculate_retention_strength(recent_cards)
-        
-        # Determine learning phase
-        phase = self._determine_learning_phase(deck, recent_cards)
-        
-        return VelocitySnapshot(
-            timestamp=datetime.now(),
-            cards_per_day=cards_per_day,
-            mastery_per_day=mastery_per_day,
-            accuracy_trend=accuracy_trend,
-            difficulty_trend=difficulty_trend,
-            study_efficiency=study_efficiency,
-            retention_strength=retention_strength,
-            phase=phase
-        )
+        return session_id
     
-    def predict_mastery_timeline(
+    def record_card_interaction(
         self, 
-        deck: Deck, 
-        target_mastery_rate: float = 0.9
-    ) -> MasteryPrediction:
+        session_id: str, 
+        correct: bool, 
+        difficulty: float = 0.5
+    ) -> None:
         """
-        Predict when the user will achieve mastery of the deck.
+        Record a card interaction during a session.
         
         Args:
-            deck: The deck to analyze
-            target_mastery_rate: Target mastery percentage (0.0 to 1.0)
-            
-        Returns:
-            Mastery prediction with timeline and recommendations
+            session_id: Session identifier
+            correct: Whether the answer was correct
+            difficulty: Difficulty level of the card
         """
-        current_velocity = self.calculate_current_velocity(deck)
+        if not self.current_session or self.current_session["session_id"] != session_id:
+            raise FlashGenieError(f"No active session found: {session_id}")
         
-        # Calculate current mastery state
-        total_cards = len(deck.flashcards)
-        mastered_cards = len([c for c in deck.flashcards if self._is_mastered(c)])
-        current_mastery_rate = mastered_cards / total_cards if total_cards > 0 else 0
+        self.current_session["cards_studied"] += 1
+        self.current_session["total_answers"] += 1
         
-        # Cards still needed for mastery
-        target_mastered = int(total_cards * target_mastery_rate)
-        cards_to_master = max(0, target_mastered - mastered_cards)
+        if correct:
+            self.current_session["correct_answers"] += 1
         
-        # Predict timeline based on current velocity
-        if current_velocity.mastery_per_day > 0:
-            base_estimate = int(cards_to_master / current_velocity.mastery_per_day)
-        else:
-            # Fallback calculation based on overall progress
-            base_estimate = self._estimate_from_historical_patterns(deck, cards_to_master)
-        
-        # Apply confidence intervals and adjustments
-        confidence_score = self._calculate_prediction_confidence(deck, current_velocity)
-        
-        # Adjust for learning curve effects
-        adjusted_estimate = self._adjust_for_learning_curve(
-            base_estimate, current_velocity, cards_to_master
-        )
-        
-        # Calculate confidence interval
-        uncertainty = max(5, int(adjusted_estimate * (1 - confidence_score)))
-        min_days = max(1, adjusted_estimate - uncertainty)
-        max_days = adjusted_estimate + uncertainty
-        
-        # Identify bottlenecks and opportunities
-        bottleneck_cards = self._identify_bottleneck_cards(deck)
-        acceleration_opportunities = self._identify_acceleration_opportunities(
-            deck, current_velocity
-        )
-        risk_factors = self._identify_risk_factors(deck, current_velocity)
-        
-        # Calculate recommended daily time
-        recommended_daily_time = self._calculate_recommended_daily_time(
-            cards_to_master, adjusted_estimate, current_velocity
-        )
-        
-        return MasteryPrediction(
-            estimated_days_to_mastery=adjusted_estimate,
-            confidence_interval=(min_days, max_days),
-            confidence_score=confidence_score,
-            recommended_daily_time=recommended_daily_time,
-            bottleneck_cards=bottleneck_cards,
-            acceleration_opportunities=acceleration_opportunities,
-            risk_factors=risk_factors
-        )
+        self.current_session["difficulty_levels"].append(difficulty)
     
-    def analyze_learning_trends(self, deck: Deck, days_back: int = 90) -> Dict[str, Any]:
+    def end_session(self, session_id: str) -> Dict[str, Any]:
         """
-        Analyze learning trends over time.
+        End a learning session and record velocity data.
         
         Args:
-            deck: The deck to analyze
-            days_back: Number of days to analyze
+            session_id: Session identifier
             
         Returns:
-            Comprehensive trend analysis
+            Dictionary with session summary
         """
-        # Get velocity snapshots over time
-        snapshots = self._get_historical_snapshots(deck, days_back)
+        if not self.current_session or self.current_session["session_id"] != session_id:
+            raise FlashGenieError(f"No active session found: {session_id}")
         
-        if len(snapshots) < 2:
-            return self._create_empty_trend_analysis()
+        session_data = self.current_session
+        end_time = datetime.now()
         
-        # Analyze velocity trends
-        velocity_trend = self._analyze_velocity_trend(snapshots)
-        accuracy_trend = self._analyze_accuracy_trend(snapshots)
-        efficiency_trend = self._analyze_efficiency_trend(snapshots)
+        # Calculate average difficulty
+        avg_difficulty = 0.5
+        if session_data["difficulty_levels"]:
+            avg_difficulty = sum(session_data["difficulty_levels"]) / len(session_data["difficulty_levels"])
         
-        # Identify patterns
-        learning_patterns = self._identify_learning_patterns(snapshots)
-        
-        # Calculate overall progress
-        progress_metrics = self._calculate_progress_metrics(deck, snapshots)
-        
-        # Generate insights and recommendations
-        insights = self._generate_learning_insights(
-            snapshots, velocity_trend, accuracy_trend, efficiency_trend
+        # Create learning session object
+        learning_session = LearningSession(
+            session_id=session_data["session_id"],
+            start_time=session_data["start_time"],
+            end_time=end_time,
+            cards_studied=session_data["cards_studied"],
+            correct_answers=session_data["correct_answers"],
+            total_answers=session_data["total_answers"],
+            deck_id=session_data["deck_id"],
+            study_mode=session_data["study_mode"],
+            difficulty_level=avg_difficulty
         )
         
+        # Record session with tracker
+        velocity_data = self.tracker.record_session(session_data["user_id"], learning_session)
+        
+        # Clear current session
+        self.current_session = None
+        
+        # Return session summary
         return {
-            'velocity_trend': velocity_trend,
-            'accuracy_trend': accuracy_trend,
-            'efficiency_trend': efficiency_trend,
-            'learning_patterns': learning_patterns,
-            'progress_metrics': progress_metrics,
-            'insights': insights,
-            'snapshots': snapshots[-10:]  # Last 10 snapshots for visualization
+            "session_id": session_id,
+            "duration_minutes": learning_session.duration_minutes,
+            "cards_studied": learning_session.cards_studied,
+            "accuracy_rate": learning_session.accuracy_rate,
+            "cards_per_minute": learning_session.cards_per_minute,
+            "velocity_data_recorded": True
         }
     
-    def recommend_learning_paths(
-        self, 
-        deck: Deck, 
-        available_time_per_day: int,
-        target_completion_days: Optional[int] = None
-    ) -> List[LearningPath]:
+    def get_velocity_metrics(self, user_id: str, days: int = 30) -> Dict[str, Any]:
         """
-        Recommend optimal learning paths based on constraints and goals.
+        Get velocity metrics for a user.
         
         Args:
-            deck: The deck to learn
-            available_time_per_day: Available study time in minutes
-            target_completion_days: Optional target completion timeline
+            user_id: User identifier
+            days: Number of days to include in metrics
             
         Returns:
-            List of recommended learning paths
+            Dictionary with velocity metrics
         """
-        current_velocity = self.calculate_current_velocity(deck)
-        mastery_prediction = self.predict_mastery_timeline(deck)
-        
-        paths = []
-        
-        # Conservative path (high success probability)
-        conservative_path = self._create_conservative_path(
-            deck, available_time_per_day, mastery_prediction
-        )
-        paths.append(conservative_path)
-        
-        # Balanced path (moderate intensity)
-        balanced_path = self._create_balanced_path(
-            deck, available_time_per_day, mastery_prediction
-        )
-        paths.append(balanced_path)
-        
-        # Aggressive path (fast completion)
-        if available_time_per_day >= 30:
-            aggressive_path = self._create_aggressive_path(
-                deck, available_time_per_day, mastery_prediction
-            )
-            paths.append(aggressive_path)
-        
-        # Custom path for specific timeline
-        if target_completion_days:
-            custom_path = self._create_custom_timeline_path(
-                deck, available_time_per_day, target_completion_days, mastery_prediction
-            )
-            if custom_path:
-                paths.append(custom_path)
-        
-        # Sort by success probability
-        paths.sort(key=lambda p: p.success_probability, reverse=True)
-        
-        return paths
-    
-    def track_velocity_change(self, deck: Deck) -> None:
-        """Record current velocity for historical tracking."""
-        velocity = self.calculate_current_velocity(deck)
-        
-        # Add to history
-        deck_id = deck.name  # Use deck name as ID
-        if deck_id not in self.velocity_history:
-            self.velocity_history[deck_id] = []
-        
-        self.velocity_history[deck_id].append({
-            'timestamp': velocity.timestamp.isoformat(),
-            'cards_per_day': velocity.cards_per_day,
-            'mastery_per_day': velocity.mastery_per_day,
-            'accuracy_trend': velocity.accuracy_trend,
-            'difficulty_trend': velocity.difficulty_trend,
-            'study_efficiency': velocity.study_efficiency,
-            'retention_strength': velocity.retention_strength,
-            'phase': velocity.phase.value
-        })
-        
-        # Keep only last 100 entries per deck
-        self.velocity_history[deck_id] = self.velocity_history[deck_id][-100:]
-        
-        # Save to disk
-        self._save_velocity_history()
-    
-    def _is_mastered(self, card: Flashcard, threshold: float = 0.9) -> bool:
-        """Check if a card is considered mastered."""
-        if card.review_count < 3:
-            return False
-        
-        accuracy = card.calculate_accuracy()
-        return accuracy >= threshold and card.difficulty < 0.4
-    
-    def _calculate_accuracy_trend(self, cards: List[Flashcard]) -> float:
-        """Calculate the trend in accuracy over time."""
-        if not cards:
-            return 0.0
-        
-        # Sort by last reviewed date
-        sorted_cards = sorted(
-            [c for c in cards if c.last_reviewed],
-            key=lambda c: c.last_reviewed
-        )
-        
-        if len(sorted_cards) < 2:
-            return 0.0
-        
-        # Calculate accuracy for first and second half
-        mid_point = len(sorted_cards) // 2
-        first_half_accuracy = statistics.mean(
-            c.calculate_accuracy() for c in sorted_cards[:mid_point]
-        )
-        second_half_accuracy = statistics.mean(
-            c.calculate_accuracy() for c in sorted_cards[mid_point:]
-        )
-        
-        return second_half_accuracy - first_half_accuracy
-    
-    def _calculate_difficulty_trend(self, cards: List[Flashcard]) -> float:
-        """Calculate the trend in difficulty progression."""
-        if not cards:
-            return 0.0
-        
-        # Look at difficulty changes over time
-        difficulty_changes = []
-        for card in cards:
-            if len(card.difficulty_history) >= 2:
-                recent_change = card.difficulty_history[-1] - card.difficulty_history[-2]
-                difficulty_changes.append(recent_change)
-        
-        if not difficulty_changes:
-            return 0.0
-        
-        return statistics.mean(difficulty_changes)
-    
-    def _calculate_retention_strength(self, cards: List[Flashcard]) -> float:
-        """Calculate overall retention strength."""
-        if not cards:
-            return 0.0
-        
-        retention_scores = []
-        for card in cards:
-            if card.review_count > 0:
-                # Simple retention score based on accuracy and review frequency
-                accuracy = card.calculate_accuracy()
-                review_consistency = min(1.0, card.review_count / 10.0)
-                retention_scores.append(accuracy * review_consistency)
-        
-        return statistics.mean(retention_scores) if retention_scores else 0.0
-    
-    def _determine_learning_phase(self, deck: Deck, recent_cards: List[Flashcard]) -> LearningPhase:
-        """Determine the current learning phase."""
-        total_cards = len(deck.flashcards)
-        reviewed_cards = len([c for c in deck.flashcards if c.review_count > 0])
-        mastered_cards = len([c for c in deck.flashcards if self._is_mastered(c)])
-        
-        reviewed_ratio = reviewed_cards / total_cards if total_cards > 0 else 0
-        mastery_ratio = mastered_cards / total_cards if total_cards > 0 else 0
-        
-        if reviewed_ratio < 0.2:
-            return LearningPhase.INITIAL
-        elif mastery_ratio < 0.3:
-            return LearningPhase.ACQUISITION
-        elif mastery_ratio < 0.7:
-            return LearningPhase.CONSOLIDATION
-        elif mastery_ratio < 0.9:
-            return LearningPhase.MASTERY
-        else:
-            return LearningPhase.MAINTENANCE
-    
-    def _create_empty_velocity_snapshot(self) -> VelocitySnapshot:
-        """Create an empty velocity snapshot for new decks."""
-        return VelocitySnapshot(
-            timestamp=datetime.now(),
-            cards_per_day=0.0,
-            mastery_per_day=0.0,
-            accuracy_trend=0.0,
-            difficulty_trend=0.0,
-            study_efficiency=0.0,
-            retention_strength=0.0,
-            phase=LearningPhase.INITIAL
-        )
-    
-    def _load_velocity_history(self) -> Dict[str, List[Dict]]:
-        """Load velocity history from storage."""
-        history_file = self.data_path / "velocity_history.json"
-        if history_file.exists():
-            try:
-                with open(history_file, 'r') as f:
-                    return json.load(f)
-            except Exception:
-                pass
-        return {}
-    
-    def _save_velocity_history(self) -> None:
-        """Save velocity history to storage."""
-        history_file = self.data_path / "velocity_history.json"
         try:
-            with open(history_file, 'w') as f:
-                json.dump(self.velocity_history, f, indent=2)
-        except Exception:
-            pass
+            return self.tracker.get_velocity_summary(user_id, days)
+        except Exception as e:
+            raise FlashGenieError(f"Failed to get velocity metrics: {e}")
     
-    def _load_learning_curves(self) -> Dict[str, Any]:
-        """Load learning curve models."""
-        return {}  # Placeholder for learning curve models
-    
-    def _load_mastery_models(self) -> Dict[str, Any]:
-        """Load mastery prediction models."""
-        return {}  # Placeholder for mastery models
-    
-    # Additional helper methods would be implemented here...
-    def _estimate_from_historical_patterns(self, deck: Deck, cards_to_master: int) -> int:
-        """Estimate timeline from historical patterns."""
-        # Fallback estimation - can be enhanced with ML models
-        return max(30, cards_to_master * 2)  # Conservative estimate
-    
-    def _calculate_prediction_confidence(self, deck: Deck, velocity: VelocitySnapshot) -> float:
-        """Calculate confidence in the prediction."""
-        # Base confidence on data quality and consistency
-        base_confidence = 0.7
+    def analyze_learning_trends(self, user_id: str, period_days: int = 30) -> List[Dict[str, Any]]:
+        """
+        Analyze learning trends for a user.
         
-        # Adjust based on data availability
-        if len(deck.flashcards) < 10:
-            base_confidence -= 0.2
+        Args:
+            user_id: User identifier
+            period_days: Period in days to analyze
+            
+        Returns:
+            List of trend analyses
+        """
+        profile = self.tracker.get_velocity_profile(user_id)
+        if not profile:
+            return []
         
-        if velocity.cards_per_day < 1:
-            base_confidence -= 0.1
+        try:
+            # Filter data to analysis period
+            cutoff_date = datetime.now() - timedelta(days=period_days)
+            recent_data = [d for d in profile.velocity_history if d.timestamp >= cutoff_date]
+            
+            trends = self.analyzer.analyze_velocity_trends(recent_data, period_days)
+            
+            return [
+                {
+                    "metric": trend.metric_type.value,
+                    "trend": trend.trend.value,
+                    "current_value": trend.current_value,
+                    "previous_value": trend.previous_value,
+                    "change_percentage": trend.change_percentage,
+                    "confidence": trend.confidence,
+                    "description": trend.description,
+                    "data_points": trend.data_points
+                }
+                for trend in trends
+            ]
+        except Exception as e:
+            raise FlashGenieError(f"Failed to analyze learning trends: {e}")
+    
+    def predict_performance(self, user_id: str, days_ahead: int = 7) -> Dict[str, Any]:
+        """
+        Predict future learning performance.
         
-        return max(0.1, min(1.0, base_confidence))
-    
-    def _adjust_for_learning_curve(self, estimate: int, velocity: VelocitySnapshot, cards_remaining: int) -> int:
-        """Adjust estimate based on learning curve effects."""
-        # Simple adjustment - can be enhanced with more sophisticated models
-        if velocity.phase == LearningPhase.INITIAL:
-            return int(estimate * 1.2)  # Learning takes longer initially
-        elif velocity.phase == LearningPhase.MASTERY:
-            return int(estimate * 0.9)  # Faster progress near mastery
-        return estimate
-    
-    def _identify_bottleneck_cards(self, deck: Deck) -> List[Flashcard]:
-        """Identify cards that are bottlenecks to progress."""
-        bottlenecks = []
-        for card in deck.flashcards:
-            if (card.review_count > 5 and 
-                card.calculate_accuracy() < 0.6 and 
-                card.difficulty > 0.7):
-                bottlenecks.append(card)
+        Args:
+            user_id: User identifier
+            days_ahead: Days to predict ahead
+            
+        Returns:
+            Dictionary with performance predictions
+        """
+        profile = self.tracker.get_velocity_profile(user_id)
+        if not profile:
+            return {"error": "No velocity data found for user"}
         
-        return sorted(bottlenecks, key=lambda c: c.calculate_accuracy())[:5]
+        try:
+            prediction = self.analyzer.predict_future_velocity(profile.velocity_history, days_ahead)
+            
+            return {
+                "prediction_horizon": prediction.prediction_horizon,
+                "confidence_level": prediction.confidence_level,
+                "predicted_velocity": prediction.predicted_velocity,
+                "predicted_accuracy": prediction.predicted_accuracy,
+                "predicted_efficiency": prediction.predicted_efficiency,
+                "trend_factor": prediction.trend_factor
+            }
+        except Exception as e:
+            raise FlashGenieError(f"Failed to predict performance: {e}")
     
-    def _identify_acceleration_opportunities(self, deck: Deck, velocity: VelocitySnapshot) -> List[str]:
-        """Identify opportunities to accelerate learning."""
-        opportunities = []
+    def create_velocity_goal(
+        self, 
+        user_id: str, 
+        goal_name: str, 
+        target_metric: str,
+        target_value: float,
+        target_days: int = 30
+    ) -> Dict[str, Any]:
+        """
+        Create a velocity improvement goal.
         
-        if velocity.study_efficiency < 1.0:
-            opportunities.append("Increase study session frequency")
+        Args:
+            user_id: User identifier
+            goal_name: Name of the goal
+            target_metric: Metric to improve (velocity, accuracy, efficiency)
+            target_value: Target value to achieve
+            target_days: Days to achieve the goal
+            
+        Returns:
+            Dictionary with goal information
+        """
+        try:
+            goal = self.tracker.create_velocity_goal(
+                user_id, goal_name, target_metric, target_value, target_days
+            )
+            
+            return {
+                "goal_id": goal.goal_id,
+                "name": goal.name,
+                "description": goal.description,
+                "metric_type": goal.metric_type,
+                "target_value": goal.target_value,
+                "current_value": goal.current_value,
+                "progress_percentage": goal.progress_percentage,
+                "target_date": goal.target_date.isoformat(),
+                "is_achieved": goal.is_achieved
+            }
+        except Exception as e:
+            raise FlashGenieError(f"Failed to create velocity goal: {e}")
+    
+    def get_learning_insights(self, user_id: str) -> List[Dict[str, Any]]:
+        """
+        Get learning insights based on velocity analysis.
         
-        if velocity.accuracy_trend < 0:
-            opportunities.append("Focus on review of struggling cards")
+        Args:
+            user_id: User identifier
+            
+        Returns:
+            List of learning insights
+        """
+        profile = self.tracker.get_velocity_profile(user_id)
+        if not profile:
+            return []
         
-        if velocity.retention_strength < 0.7:
-            opportunities.append("Implement more frequent review cycles")
+        try:
+            insights = self.analyzer.generate_velocity_insights(profile.velocity_history)
+            
+            return [
+                {
+                    "type": insight.insight_type,
+                    "title": insight.title,
+                    "description": insight.description,
+                    "significance": insight.significance,
+                    "confidence": insight.confidence,
+                    "actionable": insight.actionable,
+                    "recommended_actions": insight.recommended_actions,
+                    "potential_improvement": insight.potential_improvement,
+                    "implementation_effort": insight.implementation_effort
+                }
+                for insight in insights
+            ]
+        except Exception as e:
+            raise FlashGenieError(f"Failed to get learning insights: {e}")
+    
+    def compare_to_benchmarks(self, user_id: str, benchmark: str = "general") -> Dict[str, Any]:
+        """
+        Compare user's performance to benchmarks.
         
-        return opportunities
+        Args:
+            user_id: User identifier
+            benchmark: Benchmark to compare against
+            
+        Returns:
+            Dictionary with benchmark comparison
+        """
+        try:
+            return self.tracker.compare_to_benchmark(user_id, benchmark)
+        except Exception as e:
+            raise FlashGenieError(f"Failed to compare to benchmarks: {e}")
     
-    def _identify_risk_factors(self, deck: Deck, velocity: VelocitySnapshot) -> List[str]:
-        """Identify factors that might slow progress."""
-        risks = []
+    def get_velocity_alerts(self, user_id: str) -> List[Dict[str, Any]]:
+        """
+        Get velocity alerts for significant changes.
         
-        if velocity.cards_per_day < 2:
-            risks.append("Low study frequency may slow progress")
+        Args:
+            user_id: User identifier
+            
+        Returns:
+            List of velocity alerts
+        """
+        profile = self.tracker.get_velocity_profile(user_id)
+        if not profile:
+            return []
         
-        if velocity.accuracy_trend < -0.1:
-            risks.append("Declining accuracy trend detected")
+        try:
+            alerts = self.analyzer.detect_velocity_alerts(profile.velocity_history)
+            
+            return [
+                {
+                    "alert_id": alert.alert_id,
+                    "timestamp": alert.timestamp.isoformat(),
+                    "alert_type": alert.alert_type,
+                    "metric_affected": alert.metric_affected.value,
+                    "severity": alert.severity,
+                    "description": alert.description,
+                    "current_value": alert.current_value,
+                    "previous_value": alert.previous_value,
+                    "acknowledged": alert.acknowledged
+                }
+                for alert in alerts
+            ]
+        except Exception as e:
+            raise FlashGenieError(f"Failed to get velocity alerts: {e}")
+    
+    def get_optimal_study_schedule(self, user_id: str) -> Dict[str, Any]:
+        """
+        Get optimal study schedule recommendations.
         
-        return risks
-    
-    def _calculate_recommended_daily_time(self, cards_to_master: int, days: int, velocity: VelocitySnapshot) -> int:
-        """Calculate recommended daily study time."""
-        if velocity.study_efficiency > 0:
-            cards_per_day_needed = cards_to_master / max(days, 1)
-            minutes_needed = cards_per_day_needed / velocity.study_efficiency
-            return max(15, min(120, int(minutes_needed)))
-        return 30  # Default recommendation
-    
-    # Placeholder methods for learning path creation
-    def _create_conservative_path(self, deck: Deck, daily_time: int, prediction: MasteryPrediction) -> LearningPath:
-        """Create a conservative learning path."""
-        return LearningPath(
-            path_id="conservative",
-            description="Steady, sustainable progress with high success probability",
-            estimated_duration=prediction.estimated_days_to_mastery + 14,
-            daily_commitment=min(daily_time, 30),
-            milestones=[],
-            difficulty_progression=[0.3, 0.5, 0.7],
-            success_probability=0.9
-        )
-    
-    def _create_balanced_path(self, deck: Deck, daily_time: int, prediction: MasteryPrediction) -> LearningPath:
-        """Create a balanced learning path."""
-        return LearningPath(
-            path_id="balanced",
-            description="Balanced approach with moderate intensity",
-            estimated_duration=prediction.estimated_days_to_mastery,
-            daily_commitment=min(daily_time, 45),
-            milestones=[],
-            difficulty_progression=[0.4, 0.6, 0.8],
-            success_probability=0.75
-        )
-    
-    def _create_aggressive_path(self, deck: Deck, daily_time: int, prediction: MasteryPrediction) -> LearningPath:
-        """Create an aggressive learning path."""
-        return LearningPath(
-            path_id="aggressive",
-            description="Intensive study for rapid completion",
-            estimated_duration=max(14, prediction.estimated_days_to_mastery - 7),
-            daily_commitment=min(daily_time, 60),
-            milestones=[],
-            difficulty_progression=[0.5, 0.7, 0.9],
-            success_probability=0.6
-        )
-    
-    def _create_custom_timeline_path(self, deck: Deck, daily_time: int, target_days: int, prediction: MasteryPrediction) -> Optional[LearningPath]:
-        """Create a path for a specific timeline."""
-        if target_days < prediction.estimated_days_to_mastery // 2:
-            return None  # Unrealistic timeline
+        Args:
+            user_id: User identifier
+            
+        Returns:
+            Dictionary with schedule recommendations
+        """
+        profile = self.tracker.get_velocity_profile(user_id)
+        if not profile:
+            return {"error": "No velocity data found for user"}
         
-        return LearningPath(
-            path_id="custom",
-            description=f"Custom path to complete in {target_days} days",
-            estimated_duration=target_days,
-            daily_commitment=daily_time,
-            milestones=[],
-            difficulty_progression=[0.4, 0.6, 0.8],
-            success_probability=0.7
-        )
-    
-    # Additional placeholder methods for trend analysis
-    def _get_historical_snapshots(self, deck: Deck, days_back: int) -> List[VelocitySnapshot]:
-        """Get historical velocity snapshots."""
-        return []  # Placeholder
-    
-    def _create_empty_trend_analysis(self) -> Dict[str, Any]:
-        """Create empty trend analysis for new decks."""
+        # Analyze time patterns from velocity data
+        time_performance = {}
+        for data_point in profile.velocity_history[-50:]:  # Last 50 sessions
+            hour = data_point.timestamp.hour
+            
+            if 6 <= hour < 12:
+                time_period = "morning"
+            elif 12 <= hour < 18:
+                time_period = "afternoon"
+            elif 18 <= hour < 22:
+                time_period = "evening"
+            else:
+                time_period = "night"
+            
+            if time_period not in time_performance:
+                time_performance[time_period] = []
+            time_performance[time_period].append(data_point.learning_efficiency)
+        
+        # Find optimal times
+        optimal_times = []
+        for period, efficiencies in time_performance.items():
+            if len(efficiencies) >= 3:
+                avg_efficiency = sum(efficiencies) / len(efficiencies)
+                optimal_times.append({
+                    "time_period": period,
+                    "average_efficiency": avg_efficiency,
+                    "session_count": len(efficiencies)
+                })
+        
+        # Sort by efficiency
+        optimal_times.sort(key=lambda x: x["average_efficiency"], reverse=True)
+        
         return {
-            'velocity_trend': VelocityTrend.STEADY,
-            'accuracy_trend': 0.0,
-            'efficiency_trend': 0.0,
-            'learning_patterns': [],
-            'progress_metrics': {},
-            'insights': [],
-            'snapshots': []
+            "optimal_session_duration": profile.optimal_session_duration,
+            "optimal_difficulty_range": profile.optimal_difficulty_range,
+            "best_times": optimal_times[:3],  # Top 3 time periods
+            "recommendations": [
+                f"Schedule important sessions during {optimal_times[0]['time_period']}" if optimal_times else "Collect more data to determine optimal times",
+                f"Aim for {profile.optimal_session_duration}-minute sessions",
+                f"Target difficulty range: {profile.optimal_difficulty_range[0]:.1f}-{profile.optimal_difficulty_range[1]:.1f}"
+            ]
         }
     
-    def _analyze_velocity_trend(self, snapshots: List[VelocitySnapshot]) -> VelocityTrend:
-        """Analyze velocity trend from snapshots."""
-        return VelocityTrend.STEADY  # Placeholder
+    def export_velocity_data(self, user_id: str, format_type: str = "json") -> Dict[str, Any]:
+        """
+        Export velocity data for a user.
+        
+        Args:
+            user_id: User identifier
+            format_type: Export format (json, csv)
+            
+        Returns:
+            Dictionary with export data or file path
+        """
+        profile = self.tracker.get_velocity_profile(user_id)
+        if not profile:
+            return {"error": "No velocity data found for user"}
+        
+        if format_type == "json":
+            return {
+                "user_id": profile.user_id,
+                "created_at": profile.created_at.isoformat(),
+                "last_updated": profile.last_updated.isoformat(),
+                "current_metrics": {
+                    "velocity": profile.current_velocity,
+                    "accuracy": profile.current_accuracy,
+                    "efficiency": profile.current_efficiency
+                },
+                "learning_phase": profile.current_phase.value,
+                "session_count": len(profile.velocity_history),
+                "velocity_history": [
+                    {
+                        "timestamp": dp.timestamp.isoformat(),
+                        "cards_studied": dp.cards_studied,
+                        "accuracy_rate": dp.accuracy_rate,
+                        "cards_per_minute": dp.cards_per_minute,
+                        "learning_efficiency": dp.learning_efficiency,
+                        "session_duration": dp.session_duration
+                    }
+                    for dp in profile.velocity_history
+                ]
+            }
+        else:
+            return {"error": f"Export format '{format_type}' not supported"}
     
-    def _analyze_accuracy_trend(self, snapshots: List[VelocitySnapshot]) -> float:
-        """Analyze accuracy trend."""
-        return 0.0  # Placeholder
-    
-    def _analyze_efficiency_trend(self, snapshots: List[VelocitySnapshot]) -> float:
-        """Analyze efficiency trend."""
-        return 0.0  # Placeholder
-    
-    def _identify_learning_patterns(self, snapshots: List[VelocitySnapshot]) -> List[str]:
-        """Identify learning patterns."""
-        return []  # Placeholder
-    
-    def _calculate_progress_metrics(self, deck: Deck, snapshots: List[VelocitySnapshot]) -> Dict[str, Any]:
-        """Calculate progress metrics."""
-        return {}  # Placeholder
-    
-    def _generate_learning_insights(self, snapshots, velocity_trend, accuracy_trend, efficiency_trend) -> List[str]:
-        """Generate learning insights."""
-        return []  # Placeholder
+    def get_user_statistics(self, user_id: str) -> Dict[str, Any]:
+        """
+        Get comprehensive statistics for a user.
+        
+        Args:
+            user_id: User identifier
+            
+        Returns:
+            Dictionary with user statistics
+        """
+        profile = self.tracker.get_velocity_profile(user_id)
+        if not profile:
+            return {"error": "No velocity data found for user"}
+        
+        # Calculate comprehensive statistics
+        total_sessions = len(profile.velocity_history)
+        total_cards = sum(dp.cards_studied for dp in profile.velocity_history)
+        total_time = sum(dp.session_duration for dp in profile.velocity_history)
+        
+        # Recent performance (last 30 days)
+        recent_cutoff = datetime.now() - timedelta(days=30)
+        recent_sessions = [dp for dp in profile.velocity_history if dp.timestamp >= recent_cutoff]
+        
+        return {
+            "user_id": user_id,
+            "profile_age_days": (datetime.now() - profile.created_at).days,
+            "total_statistics": {
+                "total_sessions": total_sessions,
+                "total_cards_studied": total_cards,
+                "total_study_time_minutes": total_time,
+                "average_session_length": total_time / total_sessions if total_sessions > 0 else 0
+            },
+            "current_metrics": {
+                "velocity_cards_per_hour": profile.current_velocity,
+                "accuracy_rate": profile.current_accuracy,
+                "learning_efficiency": profile.current_efficiency,
+                "learning_phase": profile.current_phase.value
+            },
+            "recent_performance": {
+                "sessions_last_30_days": len(recent_sessions),
+                "cards_last_30_days": sum(dp.cards_studied for dp in recent_sessions),
+                "avg_accuracy_last_30_days": sum(dp.accuracy_rate for dp in recent_sessions) / len(recent_sessions) if recent_sessions else 0
+            },
+            "optimization_data": {
+                "optimal_session_duration": profile.optimal_session_duration,
+                "optimal_difficulty_range": profile.optimal_difficulty_range,
+                "peak_performance_times": profile.peak_performance_times
+            }
+        }

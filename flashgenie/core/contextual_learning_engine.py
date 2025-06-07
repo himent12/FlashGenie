@@ -1,648 +1,400 @@
 """
-Contextual Learning Engine for FlashGenie v1.5
+Contextual Learning Engine for FlashGenie.
 
-This module implements dynamic learning modes that adapt to user context
-(time available, location, device, energy level) for optimal learning experiences.
+This module provides the main ContextualLearningEngine class that serves as the
+public interface for contextual learning functionality.
 """
 
-from datetime import datetime, time
-from typing import List, Dict, Optional, Any, Tuple
-from dataclasses import dataclass, field
-from enum import Enum
-import json
-from pathlib import Path
+from typing import Dict, List, Optional, Any
+from datetime import datetime
 
-from flashgenie.core.flashcard import Flashcard
-from flashgenie.core.deck import Deck
-from flashgenie.core.quiz_engine import QuizEngine, QuizMode
-
-
-class Environment(Enum):
-    """Different environmental contexts for learning."""
-    QUIET_HOME = "quiet_home"
-    NOISY_PUBLIC = "noisy_public"
-    COMMUTING = "commuting"
-    OFFICE = "office"
-    OUTDOORS = "outdoors"
-    BED = "bed"
-
-
-class DeviceType(Enum):
-    """Different device types for learning."""
-    DESKTOP = "desktop"
-    LAPTOP = "laptop"
-    TABLET = "tablet"
-    SMARTPHONE = "smartphone"
-
-
-class AttentionLevel(Enum):
-    """User's current attention/focus level."""
-    VERY_LOW = 1
-    LOW = 2
-    MEDIUM = 3
-    HIGH = 4
-    VERY_HIGH = 5
-
-
-@dataclass
-class LearningContext:
-    """Complete context information for adaptive learning."""
-    # Time context
-    available_time: int  # minutes
-    time_of_day: datetime
-    is_weekend: bool = False
-    
-    # Environment context
-    environment: Environment = Environment.QUIET_HOME
-    noise_level: float = 0.0  # 0.0 = silent, 1.0 = very noisy
-    interruption_likelihood: float = 0.1  # 0.0 = no interruptions, 1.0 = frequent
-    
-    # Device context
-    device_type: DeviceType = DeviceType.DESKTOP
-    screen_size: str = "large"  # small, medium, large
-    input_method: str = "keyboard"  # keyboard, touch, voice
-    
-    # User context
-    attention_level: AttentionLevel = AttentionLevel.MEDIUM
-    energy_level: int = 3  # 1-5 scale
-    stress_level: float = 0.3  # 0.0 = relaxed, 1.0 = very stressed
-    
-    # Learning context
-    learning_goal: str = "general"  # general, quick_review, deep_study, test_prep
-    preferred_difficulty: float = 0.5  # 0.0 = easy, 1.0 = hard
-    multitasking: bool = False
-
-
-@dataclass
-class ContextualQuizConfig:
-    """Configuration for contextually adapted quiz sessions."""
-    # Question presentation
-    question_display_time: float = 0.0  # 0 = unlimited
-    answer_reveal_delay: float = 0.5  # seconds
-    feedback_duration: float = 2.0  # seconds
-    
-    # Interaction style
-    input_method: str = "typing"  # typing, multiple_choice, voice
-    confirmation_required: bool = False
-    auto_advance: bool = False
-    
-    # Difficulty adaptation
-    difficulty_adjustment_rate: float = 1.0  # multiplier for normal rate
-    confidence_weighting: float = 1.0  # importance of confidence ratings
-    
-    # Session structure
-    max_consecutive_cards: int = 20
-    break_frequency: int = 0  # 0 = no forced breaks
-    session_timeout: int = 0  # 0 = no timeout
-    
-    # Content filtering
-    card_types_enabled: List[str] = field(default_factory=lambda: ["all"])
-    difficulty_range: Tuple[float, float] = (0.0, 1.0)
-    tag_filters: List[str] = field(default_factory=list)
+from .content_system.deck import Deck
+from .contextual_learning.models import (
+    StudyContext, StudyPlan, ContextualRecommendation, ContextualInsight,
+    EnergyLevel, AttentionLevel, StudyEnvironment, StudyMode
+)
+from .contextual_learning.analyzer import ContextAnalyzer
+from .contextual_learning.planner import StudyPlanner
+from flashgenie.utils.exceptions import FlashGenieError
 
 
 class ContextualLearningEngine:
     """
-    Dynamic learning engine that adapts to user context for optimal experiences.
+    Main interface for contextual learning functionality.
     
-    This engine automatically adjusts:
-    - Question presentation style
-    - Interaction methods
-    - Difficulty progression
-    - Session structure
-    - Content selection
-    
-    Based on environmental and user context factors.
+    This class provides a simplified interface to the contextual learning
+    system while maintaining backward compatibility.
     """
     
-    def __init__(self, quiz_engine: QuizEngine, data_path: Optional[str] = None):
-        self.quiz_engine = quiz_engine
-        self.data_path = Path(data_path or "data/contextual_learning")
-        self.data_path.mkdir(parents=True, exist_ok=True)
-        
-        # Load context patterns and preferences
-        self.context_patterns = self._load_context_patterns()
-        self.adaptation_rules = self._load_adaptation_rules()
-        self.performance_by_context = self._load_performance_data()
-    
-    def detect_context(self, manual_context: Optional[LearningContext] = None) -> LearningContext:
+    def __init__(self, data_path: Optional[str] = None):
         """
-        Detect or infer the current learning context.
+        Initialize the contextual learning engine.
         
         Args:
-            manual_context: Manually specified context (overrides detection)
+            data_path: Optional path for storing learning data
+        """
+        self.analyzer = ContextAnalyzer()
+        self.planner = StudyPlanner()
+        self.performance_history: List[Dict[str, Any]] = []
+        self.current_context: Optional[StudyContext] = None
+        self.current_plan: Optional[StudyPlan] = None
+    
+    def create_study_context(
+        self,
+        time_available: int,
+        energy_level: int = 3,
+        attention_level: int = 3,
+        environment: str = "quiet",
+        **kwargs
+    ) -> StudyContext:
+        """
+        Create a study context for the current session.
+        
+        Args:
+            time_available: Available study time in minutes
+            energy_level: Energy level (1-5 scale)
+            attention_level: Attention level (1-4 scale)
+            environment: Study environment type
+            **kwargs: Additional context parameters
             
         Returns:
-            Detected or specified learning context
+            Study context object
         """
-        if manual_context:
-            return manual_context
-        
-        # Auto-detect context based on available information
-        now = datetime.now()
-        
-        # Time-based detection
-        available_time = self._estimate_available_time(now)
-        is_weekend = now.weekday() >= 5
-        
-        # Environment detection (simplified - could use sensors/APIs)
-        environment = self._detect_environment(now)
-        
-        # Device detection (would use actual device info)
-        device_type = DeviceType.DESKTOP  # Default
-        
-        # User state estimation
-        attention_level = self._estimate_attention_level(now, environment)
-        energy_level = self._estimate_energy_level(now)
-        
-        return LearningContext(
-            available_time=available_time,
-            time_of_day=now,
-            is_weekend=is_weekend,
-            environment=environment,
-            device_type=device_type,
-            attention_level=attention_level,
-            energy_level=energy_level
-        )
+        try:
+            # Convert numeric values to enums
+            energy_enum = EnergyLevel(energy_level)
+            attention_enum = AttentionLevel(attention_level)
+            environment_enum = StudyEnvironment(environment)
+            
+            context = StudyContext(
+                time_available=time_available,
+                energy_level=energy_enum,
+                attention_level=attention_enum,
+                environment=environment_enum,
+                time_of_day=kwargs.get("time_of_day", self._get_current_time_of_day()),
+                stress_level=kwargs.get("stress_level", 3),
+                device_type=kwargs.get("device_type", "desktop"),
+                study_mode=StudyMode(kwargs.get("study_mode", "review")),
+                target_accuracy=kwargs.get("target_accuracy", 0.8),
+                preferred_difficulty=kwargs.get("preferred_difficulty", 0.5),
+                focus_areas=set(kwargs.get("focus_areas", []))
+            )
+            
+            self.current_context = context
+            return context
+            
+        except ValueError as e:
+            raise FlashGenieError(f"Invalid context parameters: {e}")
     
-    def adapt_quiz_configuration(
-        self, 
-        context: LearningContext,
-        deck: Deck
-    ) -> ContextualQuizConfig:
+    def analyze_context(self, context: StudyContext) -> Dict[str, Any]:
         """
-        Create an adapted quiz configuration based on context.
+        Analyze the study context and provide insights.
         
         Args:
-            context: Current learning context
+            context: Study context to analyze
+            
+        Returns:
+            Dictionary with context analysis results
+        """
+        try:
+            return self.analyzer.analyze_current_context(context)
+        except Exception as e:
+            raise FlashGenieError(f"Context analysis failed: {e}")
+    
+    def create_adaptive_plan(self, deck: Deck, context: StudyContext) -> StudyPlan:
+        """
+        Create an adaptive study plan based on context.
+        
+        Args:
+            deck: The deck to study
+            context: Current study context
+            
+        Returns:
+            Adaptive study plan
+        """
+        try:
+            plan = self.planner.create_study_plan(deck, context)
+            self.current_plan = plan
+            return plan
+        except Exception as e:
+            raise FlashGenieError(f"Failed to create study plan: {e}")
+    
+    def get_contextual_recommendations(
+        self, 
+        context: StudyContext, 
+        deck: Deck
+    ) -> List[ContextualRecommendation]:
+        """
+        Get contextual recommendations for study optimization.
+        
+        Args:
+            context: Study context
+            deck: Deck to study
+            
+        Returns:
+            List of contextual recommendations
+        """
+        try:
+            return self.planner.generate_recommendations(context, deck)
+        except Exception as e:
+            raise FlashGenieError(f"Failed to generate recommendations: {e}")
+    
+    def adapt_plan_realtime(self, performance_data: Dict[str, Any]) -> Optional[StudyPlan]:
+        """
+        Adapt the current study plan based on real-time performance.
+        
+        Args:
+            performance_data: Real-time performance metrics
+            
+        Returns:
+            Adapted study plan or None if no current plan
+        """
+        if not self.current_plan:
+            return None
+        
+        try:
+            adapted_plan = self.planner.adapt_plan_realtime(self.current_plan, performance_data)
+            self.current_plan = adapted_plan
+            return adapted_plan
+        except Exception as e:
+            raise FlashGenieError(f"Failed to adapt plan: {e}")
+    
+    def record_session_performance(self, session_data: Dict[str, Any]) -> None:
+        """
+        Record performance data from a completed study session.
+        
+        Args:
+            session_data: Session performance data
+        """
+        # Add timestamp if not present
+        if "timestamp" not in session_data:
+            session_data["timestamp"] = datetime.now().isoformat()
+        
+        # Add context information if available
+        if self.current_context:
+            session_data.update({
+                "energy_level": self.current_context.energy_level.value,
+                "attention_level": self.current_context.attention_level.value,
+                "environment": self.current_context.environment.value,
+                "time_of_day": self.current_context.time_of_day,
+                "stress_level": self.current_context.stress_level
+            })
+        
+        self.performance_history.append(session_data)
+    
+    def analyze_learning_patterns(self) -> List[Dict[str, Any]]:
+        """
+        Analyze learning patterns from historical data.
+        
+        Returns:
+            List of identified learning patterns
+        """
+        try:
+            patterns = self.analyzer.identify_performance_patterns(self.performance_history)
+            
+            # Convert to dictionaries for easier consumption
+            return [
+                {
+                    "pattern_id": pattern.pattern_id,
+                    "name": pattern.name,
+                    "description": pattern.description,
+                    "context_factors": pattern.context_factors,
+                    "performance_metrics": pattern.performance_metrics,
+                    "confidence": pattern.confidence_level,
+                    "occurrence_count": pattern.occurrence_count
+                }
+                for pattern in patterns
+            ]
+        except Exception as e:
+            raise FlashGenieError(f"Failed to analyze learning patterns: {e}")
+    
+    def generate_insights(self, deck: Deck) -> List[Dict[str, Any]]:
+        """
+        Generate contextual insights for learning optimization.
+        
+        Args:
+            deck: The deck being studied
+            
+        Returns:
+            List of contextual insights
+        """
+        try:
+            insights = self.analyzer.generate_contextual_insights(deck)
+            
+            # Convert to dictionaries
+            return [
+                {
+                    "type": insight.insight_type,
+                    "title": insight.title,
+                    "description": insight.description,
+                    "evidence": insight.evidence,
+                    "confidence": insight.confidence,
+                    "actionable": insight.actionable,
+                    "recommended_changes": insight.recommended_changes,
+                    "potential_improvement": insight.potential_improvement,
+                    "implementation_difficulty": insight.implementation_difficulty
+                }
+                for insight in insights
+            ]
+        except Exception as e:
+            raise FlashGenieError(f"Failed to generate insights: {e}")
+    
+    def predict_session_outcome(self, context: StudyContext, deck: Deck) -> Dict[str, Any]:
+        """
+        Predict the outcome of a study session.
+        
+        Args:
+            context: Study context
             deck: Deck to be studied
             
         Returns:
-            Optimized quiz configuration
+            Dictionary with outcome predictions
         """
-        config = ContextualQuizConfig()
-        
-        # Adapt for time constraints
-        if context.available_time < 10:
-            config = self._adapt_for_short_session(config, context)
-        elif context.available_time > 45:
-            config = self._adapt_for_long_session(config, context)
-        
-        # Adapt for environment
-        config = self._adapt_for_environment(config, context)
-        
-        # Adapt for device
-        config = self._adapt_for_device(config, context)
-        
-        # Adapt for attention/energy
-        config = self._adapt_for_user_state(config, context)
-        
-        # Adapt for learning goals
-        config = self._adapt_for_goals(config, context)
-        
-        return config
+        try:
+            return self.analyzer.predict_session_outcome(context, deck)
+        except Exception as e:
+            raise FlashGenieError(f"Failed to predict session outcome: {e}")
     
-    def select_optimal_cards(
-        self, 
-        deck: Deck, 
-        context: LearningContext,
-        target_count: Optional[int] = None
-    ) -> List[Flashcard]:
+    def get_optimal_study_times(self) -> List[Dict[str, Any]]:
         """
-        Select optimal cards for the current context.
+        Get optimal study times based on historical performance.
         
-        Args:
-            deck: Deck to select from
-            context: Current learning context
-            target_count: Target number of cards (auto-calculated if None)
-            
         Returns:
-            Optimally selected cards for the context
+            List of optimal study time recommendations
         """
-        if target_count is None:
-            target_count = self._calculate_optimal_card_count(context)
+        if not self.performance_history:
+            return []
         
-        # Get all available cards
-        available_cards = deck.flashcards
-        
-        # Filter based on context
-        filtered_cards = self._filter_cards_by_context(available_cards, context)
-        
-        # Score cards for current context
-        scored_cards = self._score_cards_for_context(filtered_cards, context)
-        
-        # Select top cards
-        selected_cards = scored_cards[:target_count]
-        
-        # Optimize sequence for context
-        optimized_sequence = self._optimize_card_sequence(selected_cards, context)
-        
-        return optimized_sequence
-    
-    def get_context_recommendations(self, context: LearningContext) -> List[str]:
-        """
-        Get recommendations for optimizing the current context.
-        
-        Args:
-            context: Current learning context
+        # Group performance by time of day
+        time_performance = {}
+        for session in self.performance_history:
+            time_of_day = session.get("time_of_day", "unknown")
+            accuracy = session.get("accuracy", 0)
             
-        Returns:
-            List of recommendations for better learning
-        """
+            if time_of_day not in time_performance:
+                time_performance[time_of_day] = []
+            time_performance[time_of_day].append(accuracy)
+        
+        # Calculate averages and recommendations
         recommendations = []
+        for time_of_day, accuracies in time_performance.items():
+            if len(accuracies) >= 3:  # Need sufficient data
+                avg_accuracy = sum(accuracies) / len(accuracies)
+                
+                recommendations.append({
+                    "time_of_day": time_of_day,
+                    "average_accuracy": avg_accuracy,
+                    "session_count": len(accuracies),
+                    "recommendation": "optimal" if avg_accuracy > 0.8 else "good" if avg_accuracy > 0.7 else "fair"
+                })
         
-        # Environment recommendations
-        if context.noise_level > 0.7:
-            recommendations.append("Consider using headphones or finding a quieter location")
-        
-        if context.interruption_likelihood > 0.5:
-            recommendations.append("Try to minimize potential interruptions for better focus")
-        
-        # Time recommendations
-        if context.available_time < 15:
-            recommendations.append("Short sessions are great for quick reviews")
-        elif context.available_time > 60:
-            recommendations.append("Consider taking breaks every 20-30 minutes")
-        
-        # Energy/attention recommendations
-        if context.attention_level.value < 3:
-            recommendations.append("Consider easier cards or taking a break to refresh")
-        elif context.attention_level.value > 4:
-            recommendations.append("Great focus! This is perfect for challenging material")
-        
-        # Device recommendations
-        if context.device_type == DeviceType.SMARTPHONE and context.available_time > 30:
-            recommendations.append("For longer sessions, a larger screen might be more comfortable")
-        
+        # Sort by performance
+        recommendations.sort(key=lambda x: x["average_accuracy"], reverse=True)
         return recommendations
     
-    def track_context_performance(
-        self, 
-        context: LearningContext, 
-        performance_metrics: Dict[str, float]
-    ) -> None:
+    def get_context_summary(self) -> Dict[str, Any]:
         """
-        Track performance in different contexts to improve future adaptations.
+        Get a summary of the current context and recommendations.
         
-        Args:
-            context: The context during the session
-            performance_metrics: Performance metrics from the session
+        Returns:
+            Dictionary with context summary
         """
-        context_key = self._generate_context_key(context)
+        if not self.current_context:
+            return {"error": "No current context available"}
         
-        if context_key not in self.performance_by_context:
-            self.performance_by_context[context_key] = []
+        context = self.current_context
         
-        # Add performance data
-        self.performance_by_context[context_key].append({
-            'timestamp': datetime.now().isoformat(),
-            'metrics': performance_metrics,
-            'context': self._serialize_context(context)
-        })
+        # Analyze current context
+        analysis = self.analyzer.analyze_current_context(context)
         
-        # Keep only recent data (last 50 sessions per context)
-        self.performance_by_context[context_key] = \
-            self.performance_by_context[context_key][-50:]
-        
-        # Save to disk
-        self._save_performance_data()
-    
-    def _adapt_for_short_session(
-        self, 
-        config: ContextualQuizConfig, 
-        context: LearningContext
-    ) -> ContextualQuizConfig:
-        """Adapt configuration for short study sessions."""
-        config.auto_advance = True
-        config.feedback_duration = 1.0
-        config.max_consecutive_cards = min(10, context.available_time // 2)
-        config.break_frequency = 0  # No breaks for short sessions
-        
-        # Focus on due cards and reviews
-        config.card_types_enabled = ["due", "review"]
-        
-        return config
-    
-    def _adapt_for_long_session(
-        self, 
-        config: ContextualQuizConfig, 
-        context: LearningContext
-    ) -> ContextualQuizConfig:
-        """Adapt configuration for long study sessions."""
-        config.break_frequency = 20  # Break every 20 cards
-        config.max_consecutive_cards = 25
-        config.feedback_duration = 3.0
-        
-        # Include all card types for comprehensive study
-        config.card_types_enabled = ["all"]
-        
-        return config
-    
-    def _adapt_for_environment(
-        self, 
-        config: ContextualQuizConfig, 
-        context: LearningContext
-    ) -> ContextualQuizConfig:
-        """Adapt configuration for environmental context."""
-        if context.environment in [Environment.NOISY_PUBLIC, Environment.COMMUTING]:
-            # Reduce audio feedback, increase visual feedback
-            config.feedback_duration = 1.5
-            config.confirmation_required = True
-            
-        elif context.environment == Environment.BED:
-            # Gentle, relaxed mode
-            config.feedback_duration = 2.5
-            config.auto_advance = False
-            config.difficulty_range = (0.0, 0.6)  # Easier cards
-            
-        elif context.interruption_likelihood > 0.5:
-            # Quick, interruptible mode
-            config.auto_advance = True
-            config.session_timeout = context.available_time * 60  # Convert to seconds
-            
-        return config
-    
-    def _adapt_for_device(
-        self, 
-        config: ContextualQuizConfig, 
-        context: LearningContext
-    ) -> ContextualQuizConfig:
-        """Adapt configuration for device type."""
-        if context.device_type == DeviceType.SMARTPHONE:
-            # Mobile-optimized settings
-            config.input_method = "touch"
-            config.auto_advance = True
-            config.max_consecutive_cards = 15
-            
-        elif context.device_type == DeviceType.TABLET:
-            # Tablet-optimized settings
-            config.input_method = "touch"
-            config.feedback_duration = 2.0
-            
-        else:  # Desktop/Laptop
-            # Full-featured settings
-            config.input_method = "typing"
-            config.confirmation_required = False
-            
-        return config
-    
-    def _adapt_for_user_state(
-        self, 
-        config: ContextualQuizConfig, 
-        context: LearningContext
-    ) -> ContextualQuizConfig:
-        """Adapt configuration for user's attention and energy state."""
-        attention_factor = context.attention_level.value / 5.0
-        energy_factor = context.energy_level / 5.0
-        
-        # Adjust difficulty based on attention/energy
-        if attention_factor < 0.4 or energy_factor < 0.4:
-            # Low attention/energy: easier cards, slower pace
-            config.difficulty_range = (0.0, 0.5)
-            config.difficulty_adjustment_rate = 0.5
-            config.feedback_duration = 3.0
-            config.auto_advance = False
-            
-        elif attention_factor > 0.8 and energy_factor > 0.8:
-            # High attention/energy: challenging cards, faster pace
-            config.difficulty_range = (0.3, 1.0)
-            config.difficulty_adjustment_rate = 1.5
-            config.feedback_duration = 1.5
-            config.auto_advance = True
-            
-        # Adjust for stress
-        if context.stress_level > 0.7:
-            config.difficulty_range = (0.0, 0.6)  # Reduce stress with easier cards
-            config.break_frequency = max(10, config.break_frequency or 20)
-            
-        return config
-    
-    def _adapt_for_goals(
-        self, 
-        config: ContextualQuizConfig, 
-        context: LearningContext
-    ) -> ContextualQuizConfig:
-        """Adapt configuration for learning goals."""
-        if context.learning_goal == "quick_review":
-            config.auto_advance = True
-            config.feedback_duration = 1.0
-            config.card_types_enabled = ["review", "easy"]
-            
-        elif context.learning_goal == "deep_study":
-            config.auto_advance = False
-            config.feedback_duration = 4.0
-            config.confirmation_required = True
-            config.difficulty_range = (0.4, 1.0)
-            
-        elif context.learning_goal == "test_prep":
-            config.input_method = "multiple_choice"
-            config.confidence_weighting = 1.5
-            config.difficulty_range = (0.5, 1.0)
-            
-        return config
-    
-    def _estimate_available_time(self, current_time: datetime) -> int:
-        """Estimate available study time based on time of day."""
-        hour = current_time.hour
-        
-        # Simple heuristic - can be personalized
-        if 6 <= hour < 9:  # Morning
-            return 20
-        elif 9 <= hour < 12:  # Late morning
-            return 30
-        elif 12 <= hour < 14:  # Lunch
-            return 15
-        elif 14 <= hour < 17:  # Afternoon
-            return 25
-        elif 17 <= hour < 20:  # Evening
-            return 35
-        elif 20 <= hour < 23:  # Night
-            return 40
-        else:  # Late night/early morning
-            return 10
-    
-    def _detect_environment(self, current_time: datetime) -> Environment:
-        """Detect likely environment based on time and patterns."""
-        hour = current_time.hour
-        is_weekend = current_time.weekday() >= 5
-        
-        if is_weekend:
-            if 6 <= hour < 10:
-                return Environment.QUIET_HOME
-            elif 10 <= hour < 18:
-                return Environment.QUIET_HOME
-            else:
-                return Environment.QUIET_HOME
-        else:  # Weekday
-            if 7 <= hour < 9:
-                return Environment.COMMUTING
-            elif 9 <= hour < 17:
-                return Environment.OFFICE
-            elif 17 <= hour < 19:
-                return Environment.COMMUTING
-            else:
-                return Environment.QUIET_HOME
-    
-    def _estimate_attention_level(self, current_time: datetime, environment: Environment) -> AttentionLevel:
-        """Estimate attention level based on time and environment."""
-        hour = current_time.hour
-        
-        # Base attention on time of day
-        if 8 <= hour < 11:  # Morning peak
-            base_attention = AttentionLevel.HIGH
-        elif 14 <= hour < 16:  # Post-lunch dip
-            base_attention = AttentionLevel.LOW
-        elif 16 <= hour < 18:  # Afternoon peak
-            base_attention = AttentionLevel.HIGH
-        elif 20 <= hour < 22:  # Evening
-            base_attention = AttentionLevel.MEDIUM
-        else:
-            base_attention = AttentionLevel.LOW
-        
-        # Adjust for environment
-        if environment in [Environment.NOISY_PUBLIC, Environment.COMMUTING]:
-            # Reduce attention in distracting environments
-            attention_value = max(1, base_attention.value - 1)
-            return AttentionLevel(attention_value)
-        
-        return base_attention
-    
-    def _estimate_energy_level(self, current_time: datetime) -> int:
-        """Estimate energy level based on time of day."""
-        hour = current_time.hour
-        
-        if 6 <= hour < 10:  # Morning
-            return 4
-        elif 10 <= hour < 14:  # Late morning
-            return 5
-        elif 14 <= hour < 16:  # Post-lunch
-            return 3
-        elif 16 <= hour < 19:  # Afternoon
-            return 4
-        elif 19 <= hour < 22:  # Evening
-            return 3
-        else:  # Night/early morning
-            return 2
-    
-    def _calculate_optimal_card_count(self, context: LearningContext) -> int:
-        """Calculate optimal number of cards for the context."""
-        base_cards = context.available_time // 2  # Rough estimate: 2 minutes per card
-        
-        # Adjust for attention and energy
-        attention_factor = context.attention_level.value / 5.0
-        energy_factor = context.energy_level / 5.0
-        
-        adjusted_cards = int(base_cards * attention_factor * energy_factor)
-        
-        return max(5, min(50, adjusted_cards))
-    
-    def _filter_cards_by_context(self, cards: List[Flashcard], context: LearningContext) -> List[Flashcard]:
-        """Filter cards based on context appropriateness."""
-        filtered = []
-        
-        for card in cards:
-            # Filter by difficulty range if specified
-            if hasattr(context, 'preferred_difficulty'):
-                difficulty_diff = abs(card.difficulty - context.preferred_difficulty)
-                if difficulty_diff > 0.3:  # Skip cards too far from preference
-                    continue
-            
-            # Filter by attention requirements
-            if context.attention_level.value < 3 and card.difficulty > 0.7:
-                continue  # Skip hard cards when attention is low
-            
-            filtered.append(card)
-        
-        return filtered
-    
-    def _score_cards_for_context(self, cards: List[Flashcard], context: LearningContext) -> List[Flashcard]:
-        """Score and sort cards based on context appropriateness."""
-        def context_score(card: Flashcard) -> float:
-            score = 0.0
-            
-            # Due cards get priority
-            if card.is_due_for_review():
-                score += 10.0
-            
-            # Adjust for attention level
-            attention_factor = context.attention_level.value / 5.0
-            if card.difficulty <= attention_factor:
-                score += 5.0
-            
-            # Adjust for available time
-            if context.available_time < 15 and card.difficulty < 0.5:
-                score += 3.0  # Prefer easier cards for short sessions
-            
-            # Adjust for environment
-            if context.environment in [Environment.NOISY_PUBLIC, Environment.COMMUTING]:
-                if card.difficulty < 0.6:  # Prefer easier cards in distracting environments
-                    score += 2.0
-            
-            return score
-        
-        return sorted(cards, key=context_score, reverse=True)
-    
-    def _optimize_card_sequence(self, cards: List[Flashcard], context: LearningContext) -> List[Flashcard]:
-        """Optimize the sequence of cards for the context."""
-        if context.attention_level.value < 3:
-            # Start with easier cards when attention is low
-            return sorted(cards, key=lambda c: c.difficulty)
-        else:
-            # Mix difficulties for better engagement
-            return cards  # Simple approach - can be enhanced
-    
-    def _generate_context_key(self, context: LearningContext) -> str:
-        """Generate a key for context-based performance tracking."""
-        return f"{context.environment.value}_{context.device_type.value}_{context.attention_level.value}"
-    
-    def _serialize_context(self, context: LearningContext) -> Dict[str, Any]:
-        """Serialize context for storage."""
         return {
-            'available_time': context.available_time,
-            'environment': context.environment.value,
-            'device_type': context.device_type.value,
-            'attention_level': context.attention_level.value,
-            'energy_level': context.energy_level
+            "context": {
+                "time_available": context.time_available,
+                "energy_level": context.energy_level.name.lower(),
+                "attention_level": context.attention_level.name.lower(),
+                "environment": context.environment.value,
+                "time_of_day": context.time_of_day,
+                "stress_level": context.stress_level
+            },
+            "analysis": {
+                "context_score": analysis.get("context_score", 0),
+                "optimal_duration": analysis.get("optimal_duration", context.time_available),
+                "recommended_difficulty": analysis.get("recommended_difficulty", 0.5),
+                "attention_prediction": analysis.get("attention_prediction", {})
+            },
+            "current_plan": {
+                "plan_id": self.current_plan.plan_id if self.current_plan else None,
+                "total_duration": self.current_plan.total_duration if self.current_plan else 0,
+                "phase_count": len(self.current_plan.session_phases) if self.current_plan else 0,
+                "predicted_accuracy": self.current_plan.predicted_accuracy if self.current_plan else 0
+            } if self.current_plan else None
         }
     
-    def _load_context_patterns(self) -> Dict[str, Any]:
-        """Load learned context patterns."""
-        patterns_file = self.data_path / "context_patterns.json"
-        if patterns_file.exists():
-            try:
-                with open(patterns_file, 'r') as f:
-                    return json.load(f)
-            except Exception:
-                pass
-        return {}
+    def get_performance_statistics(self) -> Dict[str, Any]:
+        """
+        Get performance statistics from historical data.
+        
+        Returns:
+            Dictionary with performance statistics
+        """
+        if not self.performance_history:
+            return {"total_sessions": 0}
+        
+        # Calculate basic statistics
+        total_sessions = len(self.performance_history)
+        accuracies = [s.get("accuracy", 0) for s in self.performance_history]
+        completion_rates = [s.get("completion_rate", 0) for s in self.performance_history]
+        satisfactions = [s.get("satisfaction", 0) for s in self.performance_history if s.get("satisfaction")]
+        
+        stats = {
+            "total_sessions": total_sessions,
+            "average_accuracy": sum(accuracies) / len(accuracies) if accuracies else 0,
+            "average_completion_rate": sum(completion_rates) / len(completion_rates) if completion_rates else 0,
+            "average_satisfaction": sum(satisfactions) / len(satisfactions) if satisfactions else 0
+        }
+        
+        # Recent performance (last 10 sessions)
+        recent_sessions = self.performance_history[-10:]
+        recent_accuracies = [s.get("accuracy", 0) for s in recent_sessions]
+        
+        stats["recent_performance"] = {
+            "session_count": len(recent_sessions),
+            "average_accuracy": sum(recent_accuracies) / len(recent_accuracies) if recent_accuracies else 0,
+            "trend": self._calculate_trend(recent_accuracies)
+        }
+        
+        return stats
     
-    def _load_adaptation_rules(self) -> Dict[str, Any]:
-        """Load adaptation rules."""
-        rules_file = self.data_path / "adaptation_rules.json"
-        if rules_file.exists():
-            try:
-                with open(rules_file, 'r') as f:
-                    return json.load(f)
-            except Exception:
-                pass
-        return {}
+    def _get_current_time_of_day(self) -> str:
+        """Get the current time of day category."""
+        hour = datetime.now().hour
+        
+        if 5 <= hour < 12:
+            return "morning"
+        elif 12 <= hour < 17:
+            return "afternoon"
+        elif 17 <= hour < 21:
+            return "evening"
+        else:
+            return "night"
     
-    def _load_performance_data(self) -> Dict[str, List[Dict]]:
-        """Load performance data by context."""
-        perf_file = self.data_path / "performance_by_context.json"
-        if perf_file.exists():
-            try:
-                with open(perf_file, 'r') as f:
-                    return json.load(f)
-            except Exception:
-                pass
-        return {}
-    
-    def _save_performance_data(self) -> None:
-        """Save performance data to disk."""
-        perf_file = self.data_path / "performance_by_context.json"
-        try:
-            with open(perf_file, 'w') as f:
-                json.dump(self.performance_by_context, f, indent=2)
-        except Exception:
-            pass
+    def _calculate_trend(self, values: List[float]) -> str:
+        """Calculate trend from a list of values."""
+        if len(values) < 2:
+            return "insufficient_data"
+        
+        # Simple trend calculation
+        first_half = values[:len(values)//2]
+        second_half = values[len(values)//2:]
+        
+        first_avg = sum(first_half) / len(first_half)
+        second_avg = sum(second_half) / len(second_half)
+        
+        diff = second_avg - first_avg
+        
+        if diff > 0.05:
+            return "improving"
+        elif diff < -0.05:
+            return "declining"
+        else:
+            return "stable"

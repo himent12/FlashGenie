@@ -13,10 +13,10 @@ import json
 import math
 from pathlib import Path
 
-from flashgenie.core.flashcard import Flashcard
-from flashgenie.core.deck import Deck
-from flashgenie.core.difficulty_analyzer import DifficultyAnalyzer
-from flashgenie.core.smart_collections import SmartCollectionManager
+from ..content_system.flashcard import Flashcard
+from ..content_system.deck import Deck
+from ..content_system.difficulty_analyzer import DifficultyAnalyzer
+from ..content_system.smart_collections import SmartCollectionManager
 
 
 class EnergyLevel(Enum):

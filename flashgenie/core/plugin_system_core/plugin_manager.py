@@ -15,15 +15,15 @@ from typing import Dict, List, Optional, Type, Any
 from datetime import datetime
 import logging
 
-from flashgenie.core.plugin_system import (
+from .plugin_system import (
     BasePlugin, PluginManifest, PluginInfo, PluginType, PluginStatus,
     Permission, PluginError, PluginSecurityManager,
     ImporterPlugin, ExporterPlugin, QuizModePlugin, ThemePlugin,
     AIEnhancementPlugin, AnalyticsPlugin, IntegrationPlugin
 )
-from flashgenie.core.plugin_marketplace import PluginMarketplace
-from flashgenie.core.plugin_hot_swap import HotSwapManager, PluginUpdateManager
-from flashgenie.core.plugin_dependencies import PluginDependencyManager
+from .plugin_marketplace import PluginMarketplace
+from .plugin_hot_swap import HotSwapManager, PluginUpdateManager
+from .plugin_dependencies import PluginDependencyManager
 from flashgenie.config import APP_VERSION
 from flashgenie.utils.exceptions import FlashGenieError
 

@@ -7,7 +7,10 @@ for the FlashGenie plugin ecosystem.
 
 import json
 import hashlib
-import requests
+try:
+    import requests
+except ImportError:
+    requests = None
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
@@ -15,7 +18,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 import logging
 
-from flashgenie.core.plugin_system import PluginManifest, PluginType
+from .plugin_system import PluginManifest, PluginType
 from flashgenie.utils.exceptions import FlashGenieError
 
 
