@@ -21,6 +21,7 @@ from flashgenie.utils.exceptions import FlashGenieError
 # Rich Terminal UI components
 try:
     from ..terminal import RichTerminalUI, HelpSystem
+    from ..terminal.rich_quiz_interface import RichQuizInterface
     RICH_UI_AVAILABLE = True
 except ImportError:
     RICH_UI_AVAILABLE = False
@@ -432,27 +433,68 @@ Examples:
         print(help_text)
     
     def start_quiz(self, args: List[str] = None) -> bool:
-        """Start a quiz session (placeholder - full implementation would be extensive)."""
+        """Start a Rich quiz session with beautiful UI."""
         if self.current_deck is None:
             if self.rich_ui:
                 self.rich_ui.show_error("No deck loaded. Use 'load' command first.", "No Deck Loaded")
+                self.rich_ui.show_info("Use 'list' to see available decks, then 'load DECK_NAME'", "Tip")
             else:
                 print("No deck loaded. Use 'load' command first.")
             return True
-        
+
         if not self.current_deck.flashcards:
             if self.rich_ui:
                 self.rich_ui.show_error("The current deck is empty.", "Empty Deck")
+                self.rich_ui.show_info("Import some flashcards first with 'import FILE_PATH'", "Tip")
             else:
                 print("The current deck is empty.")
             return True
-        
-        # For now, show a placeholder message
-        if self.rich_ui:
-            self.rich_ui.show_info(f"Quiz functionality for '{self.current_deck.name}' will be implemented in the full version", "Quiz Placeholder")
+
+        # Parse quiz arguments
+        quiz_mode = QuizMode.SPACED_REPETITION
+        card_count = None
+        timed_mode = False
+
+        if args:
+            for arg in args:
+                if arg.lower() in ['spaced', 'spaced_repetition']:
+                    quiz_mode = QuizMode.SPACED_REPETITION
+                elif arg.lower() == 'random':
+                    quiz_mode = QuizMode.RANDOM
+                elif arg.lower() == 'sequential':
+                    quiz_mode = QuizMode.SEQUENTIAL
+                elif arg.lower() in ['difficult', 'difficult_first']:
+                    quiz_mode = QuizMode.DIFFICULT_FIRST
+                elif arg.lower() == 'timed':
+                    timed_mode = True
+                elif arg.isdigit():
+                    card_count = int(arg)
+
+        # Start Rich quiz session
+        if self.rich_ui and RICH_UI_AVAILABLE:
+            try:
+                quiz_interface = RichQuizInterface(self.rich_ui.console)
+                results = quiz_interface.start_quiz_session(
+                    deck=self.current_deck,
+                    mode=quiz_mode,
+                    card_count=card_count,
+                    timed=timed_mode
+                )
+
+                # Show completion message
+                if results.get('end_time'):
+                    self.rich_ui.show_success(
+                        f"Quiz completed! Accuracy: {results.get('correct_answers', 0)}/{results.get('total_cards', 0)}",
+                        "Quiz Complete"
+                    )
+
+            except Exception as e:
+                self.rich_ui.show_error(f"Quiz error: {e}", "Quiz Error")
         else:
-            print(f"Quiz functionality for '{self.current_deck.name}' will be implemented in the full version")
-        
+            # Fallback to basic quiz
+            print(f"Starting basic quiz for '{self.current_deck.name}'...")
+            print("Rich Quiz Interface not available - using basic mode")
+
         return True
     
     def show_stats(self, args: List[str] = None) -> bool:

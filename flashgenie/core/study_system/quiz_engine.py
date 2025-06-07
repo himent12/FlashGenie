@@ -454,8 +454,51 @@ class QuizEngine:
     def set_answer_checker(self, checker: Callable[[str, str], bool]) -> None:
         """
         Set a custom answer checking function.
-        
+
         Args:
             checker: Function that takes (correct_answer, user_answer) and returns bool
         """
         self.answer_checker = checker
+
+    def select_cards_for_quiz(self, deck: Deck, mode: QuizMode,
+                             card_count: Optional[int] = None) -> List[Flashcard]:
+        """
+        Select cards for a quiz session based on mode and count.
+
+        Args:
+            deck: Deck to select cards from
+            mode: Quiz mode to use for selection
+            card_count: Number of cards to select (None for all due cards)
+
+        Returns:
+            List of selected flashcards
+        """
+        if not deck.flashcards:
+            return []
+
+        available_cards = deck.flashcards.copy()
+
+        if mode == QuizMode.SPACED_REPETITION:
+            # Get cards due for review
+            due_cards = [card for card in available_cards if card.is_due_for_review()]
+            if due_cards:
+                available_cards = due_cards
+            # Sort by priority (most overdue first)
+            available_cards.sort(key=lambda c: c.next_review_date or datetime.now())
+
+        elif mode == QuizMode.DIFFICULT_FIRST:
+            # Sort by difficulty (hardest first)
+            available_cards.sort(key=lambda c: getattr(c, 'difficulty', 0.5), reverse=True)
+
+        elif mode == QuizMode.RANDOM:
+            # Shuffle for random order
+            import random
+            random.shuffle(available_cards)
+
+        # SEQUENTIAL mode uses cards in their current order
+
+        # Limit to requested count
+        if card_count is not None:
+            available_cards = available_cards[:card_count]
+
+        return available_cards

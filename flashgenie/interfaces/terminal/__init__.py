@@ -21,6 +21,7 @@ from .search_system import FuzzySearchEngine, InteractiveSearchInterface
 from .accessibility import AccessibilityManager
 from .performance_optimizer import PerformanceOptimizer
 from .help_system import HelpSystem
+from .rich_quiz_interface import RichQuizInterface
 
 __all__ = [
     "RichTerminalUI",
@@ -34,7 +35,8 @@ __all__ = [
     "InteractiveSearchInterface",
     "AccessibilityManager",
     "PerformanceOptimizer",
-    "HelpSystem"
+    "HelpSystem",
+    "RichQuizInterface"
 ]
 
 # Version info
