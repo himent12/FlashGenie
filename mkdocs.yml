@@ -1,8 +1,8 @@
 # FlashGenie Documentation Configuration
 # MkDocs configuration for interactive user manual and comprehensive documentation
 
-site_name: FlashGenie Documentation
-site_description: Comprehensive documentation for FlashGenie - The intelligent flashcard application with adaptive spaced repetition
+site_name: FlashGenie v1.5 Documentation
+site_description: AI-powered intelligent spaced repetition learning platform with advanced features and adaptive learning
 site_author: FlashGenie Team
 site_url: https://himent12.github.io/FlashGenie
 

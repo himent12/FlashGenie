@@ -37,6 +37,15 @@ class StudyGoal(Enum):
     CHALLENGE = "challenge"  # Push difficulty boundaries
 
 
+class Environment(Enum):
+    """Study environment types."""
+    QUIET_HOME = "quiet_home"
+    NOISY_PUBLIC = "noisy_public"
+    COMMUTING = "commuting"
+    LIBRARY = "library"
+    OFFICE = "office"
+
+
 @dataclass
 class StudyPreferences:
     """User preferences for study sessions."""
@@ -56,7 +65,7 @@ class StudyContext:
     available_time: int  # minutes
     energy_level: EnergyLevel
     time_of_day: datetime
-    environment: str = "quiet"  # quiet, noisy, mobile
+    environment: Environment = Environment.QUIET_HOME
     device_type: str = "desktop"  # desktop, mobile, tablet
     interruption_likelihood: float = 0.1  # 0.0 = no interruptions, 1.0 = many
     goals: List[StudyGoal] = field(default_factory=lambda: [StudyGoal.MAINTENANCE])
@@ -188,7 +197,7 @@ class AdaptiveStudyPlanner:
         urgency_scores = {}
         for card in all_cards:
             urgency = self._calculate_card_urgency(card)
-            urgency_scores[card.id] = urgency
+            urgency_scores[card.card_id] = urgency
         
         return {
             'total_cards': len(all_cards),

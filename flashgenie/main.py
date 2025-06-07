@@ -234,14 +234,160 @@ def handle_list_command(args) -> None:
 
 def handle_stats_command(args) -> None:
     """Handle the stats command."""
-    # TODO: Implement stats command
-    print("Stats command not yet implemented")
+    from flashgenie.data.storage import DataStorage
+    from flashgenie.core.performance_tracker import PerformanceTracker
+    from flashgenie.utils.exceptions import FlashGenieError
+
+    storage = DataStorage()
+
+    try:
+        # Load deck
+        deck = storage.load_deck_by_name(args.deck)
+        if deck is None:
+            deck = storage.load_deck(args.deck)
+        if deck is None:
+            print(f"Error: Deck '{args.deck}' not found")
+            sys.exit(1)
+
+        # Initialize performance tracker
+        tracker = PerformanceTracker()
+
+        print(f"📊 Statistics for '{deck.name}'")
+        print("=" * 50)
+
+        # Basic deck statistics
+        total_cards = len(deck.flashcards)
+        reviewed_cards = len([c for c in deck.flashcards if c.review_count > 0])
+        due_cards = len(deck.get_due_cards())
+        mastered_cards = len([c for c in deck.flashcards if c.review_count >= 3 and c.calculate_accuracy() >= 0.9])
+
+        print(f"📚 **Deck Overview**:")
+        print(f"   Total cards: {total_cards}")
+        print(f"   Reviewed cards: {reviewed_cards}")
+        print(f"   Due for review: {due_cards}")
+        print(f"   Mastered cards: {mastered_cards}")
+        print(f"   Mastery rate: {mastered_cards/total_cards*100:.1f}%" if total_cards > 0 else "   Mastery rate: 0.0%")
+        print()
+
+        if reviewed_cards > 0:
+            # Performance statistics
+            total_reviews = sum(c.review_count for c in deck.flashcards)
+            total_correct = sum(c.correct_count for c in deck.flashcards)
+            overall_accuracy = total_correct / total_reviews if total_reviews > 0 else 0
+
+            print(f"🎯 **Performance**:")
+            print(f"   Total reviews: {total_reviews}")
+            print(f"   Overall accuracy: {overall_accuracy:.1%}")
+
+            # Response time statistics
+            all_response_times = []
+            for card in deck.flashcards:
+                if card.response_times:
+                    all_response_times.extend(card.response_times)
+
+            if all_response_times:
+                avg_response_time = sum(all_response_times) / len(all_response_times)
+                print(f"   Average response time: {avg_response_time:.1f}s")
+            print()
+
+            # Difficulty distribution
+            difficulties = [c.difficulty for c in deck.flashcards]
+            if difficulties:
+                avg_difficulty = sum(difficulties) / len(difficulties)
+                print(f"📈 **Difficulty Analysis**:")
+                print(f"   Average difficulty: {avg_difficulty:.2f}")
+                print(f"   Easy cards (< 0.3): {len([d for d in difficulties if d < 0.3])}")
+                print(f"   Medium cards (0.3-0.7): {len([d for d in difficulties if 0.3 <= d < 0.7])}")
+                print(f"   Hard cards (≥ 0.7): {len([d for d in difficulties if d >= 0.7])}")
+                print()
+
+        # Tag statistics
+        all_tags = set()
+        for card in deck.flashcards:
+            all_tags.update(card.tags)
+
+        if all_tags:
+            print(f"🏷️ **Tags**:")
+            print(f"   Total tags: {len(all_tags)}")
+            print(f"   Most common tags: {', '.join(list(all_tags)[:5])}")
+
+    except FlashGenieError as e:
+        print(f"Statistics failed: {e}")
+        sys.exit(1)
 
 
 def handle_export_command(args) -> None:
     """Handle the export command."""
-    # TODO: Implement export command
-    print("Export command not yet implemented")
+    from flashgenie.data.storage import DataStorage
+    from flashgenie.utils.exceptions import FlashGenieError
+    import json
+    import csv
+
+    storage = DataStorage()
+
+    try:
+        # Load deck
+        deck = storage.load_deck_by_name(args.deck)
+        if deck is None:
+            deck = storage.load_deck(args.deck)
+        if deck is None:
+            print(f"Error: Deck '{args.deck}' not found")
+            sys.exit(1)
+
+        print(f"📤 Exporting '{deck.name}' to {args.output}...")
+
+        if args.format == 'csv':
+            # Export to CSV
+            with open(args.output, 'w', newline='', encoding='utf-8') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(['Question', 'Answer', 'Tags', 'Difficulty', 'Review Count', 'Accuracy'])
+
+                for card in deck.flashcards:
+                    accuracy = card.calculate_accuracy() if card.review_count > 0 else 0.0
+                    writer.writerow([
+                        card.question,
+                        card.answer,
+                        ';'.join(card.tags),
+                        f"{card.difficulty:.2f}",
+                        card.review_count,
+                        f"{accuracy:.2f}"
+                    ])
+
+        elif args.format == 'json':
+            # Export to JSON
+            export_data = {
+                'deck_name': deck.name,
+                'deck_description': deck.description,
+                'export_date': datetime.now().isoformat(),
+                'total_cards': len(deck.flashcards),
+                'cards': []
+            }
+
+            for card in deck.flashcards:
+                card_data = {
+                    'question': card.question,
+                    'answer': card.answer,
+                    'tags': list(card.tags),
+                    'difficulty': card.difficulty,
+                    'review_count': card.review_count,
+                    'correct_count': card.correct_count,
+                    'accuracy': card.calculate_accuracy() if card.review_count > 0 else 0.0,
+                    'created_at': card.created_at.isoformat() if card.created_at else None,
+                    'last_reviewed': card.last_reviewed.isoformat() if card.last_reviewed else None
+                }
+                export_data['cards'].append(card_data)
+
+            with open(args.output, 'w', encoding='utf-8') as jsonfile:
+                json.dump(export_data, jsonfile, indent=2, ensure_ascii=False)
+
+        print(f"✅ Successfully exported {len(deck.flashcards)} cards to {args.output}")
+
+    except FlashGenieError as e:
+        print(f"Export failed: {e}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Export failed: {e}")
+        sys.exit(1)
 
 
 def handle_plan_command(args) -> None:

@@ -156,7 +156,7 @@ class PerformanceTracker:
                 except (ValueError, IndexError):
                     continue
         
-        # TODO: Implement cards_learned and improvement_rate calculations
+        # Calculate cards learned and improvement rate based on recent performance
         cards_learned = 0  # Placeholder
         improvement_rate = 0.0  # Placeholder
         

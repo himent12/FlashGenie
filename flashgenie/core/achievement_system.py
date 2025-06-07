@@ -6,7 +6,7 @@ streaks, challenges, and social features to increase motivation and engagement.
 """
 
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Set, Any, Callable
+from typing import List, Dict, Optional, Set, Any, Callable, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
 import json

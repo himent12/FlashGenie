@@ -1,4 +1,41 @@
+# FlashGenie v1.5 Dependencies
+# Core dependencies for intelligent spaced repetition learning platform
+
+# Data processing and analysis
 pandas>=1.5.0
+
+# Terminal UI and colors
 colorama>=0.4.6
+
+# Date and time utilities
 python-dateutil>=2.8.2
+
+# Type hints support for older Python versions
 typing-extensions>=4.0.0
+
+# JSON handling (built-in, but ensuring compatibility)
+# json (built-in)
+
+# Math and statistics (built-in)
+# math, statistics (built-in)
+
+# Path handling (built-in)
+# pathlib (built-in)
+
+# Regular expressions (built-in)
+# re (built-in)
+
+# Collections utilities (built-in)
+# collections (built-in)
+
+# Enum support (built-in)
+# enum (built-in)
+
+# Dataclasses (built-in Python 3.7+)
+# dataclasses (built-in)
+
+# Optional: For enhanced features (not required for core functionality)
+# numpy>=1.21.0  # For advanced mathematical operations
+# scipy>=1.7.0   # For statistical analysis
+# matplotlib>=3.5.0  # For visualization (future feature)
+# networkx>=2.6.0  # For knowledge graph algorithms (future feature)

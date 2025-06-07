@@ -1,323 +1,306 @@
-# 🧞‍♂️ FlashGenie v1.0
+# FlashGenie v1.5 🧞‍♂️
 
-**FlashGenie** is an intelligent flashcard application that uses advanced spaced repetition algorithms and AI-powered features to optimize your learning experience. Create, study, and master any subject with scientifically-proven learning techniques enhanced by smart difficulty adjustment and advanced organization tools.
+**The AI-Powered Intelligent Spaced Repetition Learning Platform**
 
-## ✨ Key Features
+FlashGenie v1.5 transforms traditional flashcard studying into an intelligent, adaptive, and engaging learning experience. Powered by cutting-edge AI algorithms and grounded in cognitive science research, FlashGenie adapts to your learning patterns, predicts your progress, and optimizes your study sessions for maximum efficiency.
 
-### 🧠 **Intelligent Learning**
-- **Smart Difficulty Auto-Adjustment**: Cards automatically adapt to your performance
-- **Advanced Spaced Repetition**: Enhanced SM-2 algorithm with confidence tracking
-- **Performance Analytics**: Comprehensive learning insights and progress tracking
-- **Confidence-Based Learning**: 1-5 scale confidence ratings optimize review timing
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Version](https://img.shields.io/badge/version-1.5.0-green.svg)](https://github.com/himent12/FlashGenie/releases)
 
-### 🏷️ **Advanced Organization**
-- **Hierarchical Tagging**: Organize with parent-child tag relationships (e.g., "Science > Biology > Cells")
-- **Auto-Tagging**: AI-powered content analysis suggests relevant tags automatically
-- **Smart Collections**: Dynamic card grouping by difficulty, performance, tags, and timing
-- **Intelligent Search**: Find cards and decks with advanced filtering
+## ✨ **What's New in v1.5**
 
-### 📁 **Flexible Data Management**
-- **Multiple Import Formats**: CSV, TXT with auto-detection and format recognition
-- **Comprehensive Export**: JSON, CSV with full metadata preservation
-- **Offline-First**: All data stays local and private
-- **Cross-Platform**: Works on Windows, macOS, and Linux
+### 🧠 **AI-Powered Learning Intelligence**
+- **Adaptive Study Sessions**: Context-aware study planning that adapts to your time, energy, and environment
+- **Learning Velocity Tracking**: Predictive analytics that forecast your mastery timeline
+- **Contextual Learning Engine**: Dynamic adaptation based on device, environment, and attention level
+- **Knowledge Graph Visualization**: Visual representation of your learning progress and concept relationships
+- **Gamification System**: Comprehensive achievement system with streaks, challenges, and rewards
+- **Intelligent Content Suggestions**: AI-powered recommendations for new cards and study strategies
 
-### 💻 **Rich Interface**
-- **Interactive CLI**: Full-featured terminal interface with colors and progress tracking
-- **Command Mode**: Direct command execution for automation
-- **Real-Time Feedback**: Immediate difficulty adjustments and explanations
-- **Comprehensive Help**: Built-in guidance and examples
+### 📚 **Enhanced Core Features**
+- **Smart Spaced Repetition**: Enhanced algorithms with personalized intervals
+- **Advanced Difficulty Analysis**: Multi-factor difficulty adjustment with confidence weighting
+- **Hierarchical Tag Management**: Sophisticated content organization with auto-tagging
+- **Smart Collections**: Dynamic grouping with advanced filtering and analytics
+- **Comprehensive Analytics**: Deep learning insights with velocity tracking and predictions
 
-## 🚀 Quick Start
+## 🚀 **Key Features**
 
-### Installation
+### **🎯 Intelligent Learning**
+- **Adaptive Study Planning**: AI creates optimal study sessions based on your context
+- **Predictive Analytics**: Forecasts learning progress and mastery timelines
+- **Context Awareness**: Adapts to your environment, device, and attention level
+- **Smart Difficulty**: Multi-factor difficulty adjustment with performance analysis
+- **Personalized Intervals**: Spaced repetition optimized for your learning patterns
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/himent12/FlashGenie.git
-   cd FlashGenie
-   ```
+### **📊 Advanced Analytics**
+- **Learning Velocity**: Track cards per day, mastery rate, and study efficiency
+- **Progress Visualization**: Knowledge graphs showing concept relationships and mastery
+- **Performance Insights**: Detailed analytics with trends and recommendations
+- **Bottleneck Identification**: Find cards that slow your progress
+- **Mastery Prediction**: AI-powered timeline forecasts with confidence intervals
 
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### **🎮 Gamification & Motivation**
+- **Achievement System**: 20+ achievements across different categories
+- **Study Streaks**: Daily, weekly, accuracy, and perfect streaks
+- **Level Progression**: Earn points and level up as you learn
+- **Challenge System**: Time-limited challenges and competitions
+- **Progress Rewards**: Visual feedback and celebration of milestones
 
-3. **Run FlashGenie**:
-   ```bash
-   python -m flashgenie
-   ```
+### **💡 Smart Content Management**
+- **AI Content Suggestions**: Intelligent recommendations for new flashcards
+- **Gap Analysis**: Identifies missing knowledge and prerequisite concepts
+- **Related Topic Discovery**: Suggests related topics for expanded learning
+- **Auto-tagging**: Intelligent content analysis with hierarchical organization
+- **Import/Export**: Support for multiple formats with metadata preservation
 
-### Your First Intelligent Study Session
+## 📦 **Installation**
 
-1. **Import flashcards** with automatic tagging:
-   ```bash
-   python -m flashgenie import flashcards.csv --name "My Study Deck"
-   ```
+### **Requirements**
+- Python 3.8 or higher
+- 50MB free disk space
+- Terminal/Command prompt access
 
-2. **Auto-tag your cards**:
-   ```bash
-   python -m flashgenie autotag
-   ```
-
-3. **Start an adaptive quiz**:
-   ```bash
-   python -m flashgenie quiz "My Study Deck"
-   ```
-
-4. **Explore smart collections**:
-   ```bash
-   python -m flashgenie collections
-   ```
-
-## 🎯 Smart Features in Action
-
-### 🧠 Adaptive Difficulty
+### **Quick Install**
 ```bash
-# During quiz sessions, FlashGenie asks for confidence:
-Your answer: Paris
-✓ Correct!
-
-How confident were you? (1=Very Low, 2=Low, 3=Medium, 4=High, 5=Very High): 4
-
-# System provides real-time feedback:
-Difficulty adjusted: Difficulty increased slightly based on high accuracy, fast response times
-```
-
-### 🏷️ Intelligent Organization
-```bash
-# Create hierarchical tags
-python -m flashgenie tags create "Languages > Spanish > Grammar > Verbs"
-
-# Auto-tag your entire deck
-python -m flashgenie autotag
-# ✓ Added tags to 23 cards
-
-# Explore smart collections
-python -m flashgenie collections
-# Shows: Easy Cards, Hard Cards, Struggling Cards, Mastered Cards, Due for Review, etc.
-```
-
-### 📊 Enhanced Analytics
-```bash
-python -m flashgenie stats
-
-# Enhanced Statistics: Spanish Vocabulary
-# =====================================
-# Total Cards: 150        Due for Review: 23
-# Reviewed Cards: 89       Average Accuracy: 73.2%
-# Total Reviews: 342       Average Difficulty: 0.52
-# Avg Response Time: 3.2s
-#
-# Difficulty Distribution:
-# Easy (0.0-0.33): 45 cards
-# Medium (0.33-0.67): 78 cards  
-# Hard (0.67-1.0): 27 cards
-#
-# Recent Difficulty Adjustments: 12 cards
-#   ¿Cómo estás?... - Difficulty increased based on high accuracy
-#   subjunctive mood... - Difficulty decreased based on low accuracy
-```
-
-## 📚 Complete Command Reference
-
-### Core Commands
-```bash
-# Deck Management
-python -m flashgenie list                    # List all decks
-python -m flashgenie load "Deck Name"       # Load a specific deck
-python -m flashgenie import file.csv        # Import flashcards
-
-# Intelligent Study
-python -m flashgenie quiz [mode]            # Start adaptive quiz with confidence tracking
-python -m flashgenie stats                  # Enhanced statistics with difficulty tracking
-
-# Smart Organization  
-python -m flashgenie collections            # Show smart collections and statistics
-python -m flashgenie autotag               # Auto-tag cards in current deck
-python -m flashgenie tags                  # Manage hierarchical tags
-python -m flashgenie tags create <path>    # Create hierarchical tags
-python -m flashgenie tags suggest          # Suggest tags for untagged cards
-```
-
-### Quiz Modes
-- **spaced** (default): Adaptive spaced repetition with difficulty adjustment
-- **random**: Questions in random order
-- **sequential**: Questions in original order  
-- **difficult**: Focus on challenging cards first
-
-### Smart Collections
-FlashGenie automatically creates intelligent collections:
-- **Easy Cards**: Low difficulty cards (0.0-0.3)
-- **Medium Cards**: Moderate difficulty cards (0.3-0.7)
-- **Hard Cards**: High difficulty cards (0.7-1.0)
-- **Struggling Cards**: Cards with low accuracy
-- **Mastered Cards**: Cards with high accuracy
-- **Due for Review**: Cards needing attention
-- **Recently Added**: Cards added in the last 7 days
-
-## 📁 Supported File Formats
-
-### CSV Format with Auto-Detection
-```csv
-question,answer,tags
-What is the capital of France?,Paris,"geography,europe"
-What does CPU stand for?,Central Processing Unit,"technology,computers"
-```
-
-### TXT Format with Multiple Patterns
-```
-Q: What is the capital of Spain?
-A: Madrid
-
-Question: What does API stand for?
-Answer: Application Programming Interface
-
-# Also supports separator-based formats:
-What is photosynthesis?
----
-The process by which plants convert light energy into chemical energy
-```
-
-## 🧠 Advanced Learning Science
-
-### Enhanced Spaced Repetition
-FlashGenie's algorithm considers multiple factors:
-- **Performance History**: Accuracy trends over time
-- **Response Speed**: How quickly you answer
-- **Confidence Levels**: Your self-assessed confidence (1-5 scale)
-- **Difficulty Progression**: Dynamic adjustment based on mastery
-- **Content Similarity**: Learning from related cards
-
-### Intelligent Difficulty Adjustment
-The system automatically:
-- **Increases difficulty** for cards you answer quickly and confidently
-- **Decreases difficulty** for cards you struggle with
-- **Maintains optimal challenge** to maximize retention
-- **Provides explanations** for all adjustments
-- **Tracks history** of difficulty changes
-
-### Smart Content Analysis
-Auto-tagging recognizes:
-- **Academic subjects**: mathematics, science, history, literature
-- **Programming concepts**: algorithms, data structures, languages
-- **Difficulty levels**: basic, intermediate, advanced
-- **Content types**: definitions, formulas, procedures, facts
-
-## 🛠️ Architecture & Extensibility
-
-### Modular Design
-```
-FlashGenie/
-├── flashgenie/
-│   ├── core/                 # Business logic and algorithms
-│   │   ├── flashcard.py      # Enhanced flashcard with tracking
-│   │   ├── deck.py           # Deck management with collections
-│   │   ├── spaced_repetition.py  # SM-2 algorithm
-│   │   ├── difficulty_analyzer.py  # Smart difficulty adjustment
-│   │   ├── tag_manager.py    # Hierarchical tagging system
-│   │   ├── smart_collections.py   # Dynamic collections
-│   │   └── quiz_engine.py    # Enhanced quiz with confidence
-│   ├── data/                 # Import/export/storage
-│   ├── interfaces/           # User interfaces (CLI implemented)
-│   └── utils/                # Utilities and helpers
-├── docs/                     # Comprehensive documentation
-└── assets/                   # Sample data and resources
-```
-
-### Future-Ready
-- **GUI-Ready**: Core designed for graphical interfaces
-- **API-Ready**: Classes structured for REST API integration
-- **Plugin Architecture**: Extensible for custom features
-- **Database-Ready**: Easy migration from JSON to SQL databases
-
-## 📖 Documentation
-
-- **[User Guide](docs/user_guide.md)**: Complete usage instructions with examples
-- **[Developer Guide](docs/developer_guide.md)**: Technical documentation and contribution guidelines
-- **[New Features Guide](docs/new_features.md)**: Detailed documentation of smart features
-
-## 🎯 What Makes FlashGenie Special
-
-### 🧠 **Truly Adaptive Learning**
-Unlike traditional flashcard apps, FlashGenie learns from your behavior:
-- **Personalized difficulty curves** for each card
-- **Confidence-based scheduling** optimizes review timing
-- **Performance pattern recognition** improves over time
-- **Real-time adjustments** with clear explanations
-
-### 🏷️ **Intelligent Organization**
-Advanced organization that scales with your learning:
-- **Hierarchical tagging** creates logical knowledge structures
-- **Auto-tagging** reduces manual organization work
-- **Smart collections** automatically group related content
-- **Dynamic filtering** finds exactly what you need
-
-### 📊 **Comprehensive Analytics**
-Deep insights into your learning process:
-- **Difficulty progression tracking** shows mastery development
-- **Performance trend analysis** identifies strengths and weaknesses
-- **Response time analytics** optimize study efficiency
-- **Confidence correlation** validates self-assessment accuracy
-
-## 🗺️ Roadmap
-
-### ✅ **Version 1.0 (Current)**
-- Smart difficulty auto-adjustment with confidence tracking
-- Advanced hierarchical tagging with auto-categorization
-- Smart collections with multiple criteria types
-- Enhanced CLI with comprehensive command set
-- Comprehensive analytics and progress tracking
-
-### 🔄 **Planned Features**
-- **GUI Interface**: Modern desktop application with visual analytics
-- **Web Version**: Browser-based interface with real-time sync
-- **Mobile Apps**: iOS and Android with offline capability
-- **Advanced AI**: Machine learning for content generation and analysis
-- **Collaboration**: Share decks and study with others
-- **Cloud Sync**: Optional cloud backup and synchronization
-
-## 🤝 Contributing
-
-We welcome contributions! FlashGenie is built with extensibility in mind.
-
-### Development Setup
-```bash
+# Clone the repository
 git clone https://github.com/himent12/FlashGenie.git
 cd FlashGenie
-python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
+
+# Install dependencies
 pip install -r requirements.txt
-python -m flashgenie
+
+# Verify installation
+python -m flashgenie --version
 ```
 
-### Areas for Contribution
-- **New import formats** (Anki, Quizlet, etc.)
-- **Enhanced algorithms** (custom spaced repetition variants)
-- **GUI development** (Tkinter, PyQt, or web-based)
-- **Mobile apps** (React Native, Flutter)
-- **Advanced analytics** (machine learning insights)
+### **Alternative Installation**
+```bash
+# Install from PyPI (when available)
+pip install flashgenie
 
-## 📄 License
+# Or install in development mode
+pip install -e .
+```
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## 🎯 **Quick Start Guide**
 
-## 🙏 Acknowledgments
+### **1. Create Your First Deck**
+```bash
+# Create a new deck
+python -m flashgenie create "Spanish Vocabulary" "Learn Spanish words and phrases"
 
-- **Spaced Repetition Research**: Hermann Ebbinghaus and Piotr Wozniak
-- **SM-2 Algorithm**: SuperMemo methodology
-- **Learning Science**: Cognitive psychology research on memory and retention
-- **Open Source Community**: Python ecosystem and contributors
+# Import flashcards from CSV
+python -m flashgenie import "Spanish Vocabulary" my_cards.csv
 
-## 📞 Support & Community
+# Or create cards interactively
+python -m flashgenie add "Spanish Vocabulary"
+```
 
-- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/himent12/FlashGenie/issues)
-- 💡 **Feature Requests**: [GitHub Discussions](https://github.com/himent12/FlashGenie/discussions)
-- 📚 **Documentation**: [User Guide](docs/user_guide.md) and [Developer Guide](docs/developer_guide.md)
-- 🤝 **Contributing**: See [Developer Guide](docs/developer_guide.md) for contribution guidelines
+### **2. Start Learning with AI**
+```bash
+# Get an adaptive study plan
+python -m flashgenie plan "Spanish Vocabulary" --time 30 --energy 4
+
+# Start an intelligent quiz session
+python -m flashgenie quiz "Spanish Vocabulary" --mode adaptive
+
+# Quick mobile session
+python -m flashgenie plan "Spanish Vocabulary" --time 10 --environment mobile
+```
+
+### **3. Track Your Progress**
+```bash
+# View comprehensive statistics
+python -m flashgenie stats "Spanish Vocabulary"
+
+# Analyze learning velocity
+python -m flashgenie velocity "Spanish Vocabulary" --predict
+
+# Generate knowledge graph
+python -m flashgenie graph "Spanish Vocabulary" --export graph.html
+```
+
+### **4. Get AI Recommendations**
+```bash
+# Get content suggestions
+python -m flashgenie suggest "Spanish Vocabulary" --cards 5
+
+# Find related topics
+python -m flashgenie suggest "Spanish Vocabulary" --topics
+
+# Identify knowledge gaps
+python -m flashgenie suggest "Spanish Vocabulary" --gaps
+```
+
+### **5. Track Achievements**
+```bash
+# View your achievements
+python -m flashgenie achievements
+
+# Check study streaks
+python -m flashgenie achievements --streaks
+
+# See progress towards goals
+python -m flashgenie achievements --progress
+```
+
+## 🎮 **Complete Command Reference**
+
+### **Core Commands**
+| Command | Description | Example |
+|---------|-------------|---------|
+| `create` | Create a new deck | `python -m flashgenie create "Math Facts"` |
+| `import` | Import flashcards | `python -m flashgenie import "Deck" cards.csv` |
+| `quiz` | Start a quiz session | `python -m flashgenie quiz "Deck" --mode adaptive` |
+| `stats` | View statistics | `python -m flashgenie stats "Deck"` |
+| `list` | List all decks | `python -m flashgenie list` |
+| `export` | Export deck data | `python -m flashgenie export "Deck" output.json` |
+
+### **AI-Powered Commands**
+| Command | Description | Example |
+|---------|-------------|---------|
+| `plan` | Create adaptive study plan | `python -m flashgenie plan "Deck" --time 30` |
+| `velocity` | Analyze learning velocity | `python -m flashgenie velocity "Deck" --predict` |
+| `graph` | Generate knowledge graph | `python -m flashgenie graph "Deck" --export graph.json` |
+| `achievements` | View achievements | `python -m flashgenie achievements --streaks` |
+| `suggest` | Get AI recommendations | `python -m flashgenie suggest "Deck" --gaps` |
+
+## 📊 **Usage Examples**
+
+### **Adaptive Study Session**
+```bash
+# Morning study session
+python -m flashgenie plan "Biology" --time 45 --energy 5 --environment quiet
+
+# Quick commute review
+python -m flashgenie plan "Vocabulary" --time 15 --energy 3 --environment mobile
+
+# Evening focused study
+python -m flashgenie plan "Math" --time 60 --energy 4 --environment quiet
+```
+
+### **Learning Analytics**
+```bash
+# Comprehensive analysis
+python -m flashgenie velocity "Spanish" --predict --trends
+
+# Export learning data
+python -m flashgenie export "Spanish" learning_data.json --format json
+
+# Generate visual knowledge map
+python -m flashgenie graph "Spanish" --export knowledge_map.html --format html
+```
+
+### **Content Management**
+```bash
+# Import with auto-tagging
+python -m flashgenie import "History" timeline.csv --auto-tag
+
+# Get personalized suggestions
+python -m flashgenie suggest "Chemistry" --cards 10 --topics
+
+# Identify weak areas
+python -m flashgenie suggest "Physics" --gaps
+```
+
+## 🔬 **Scientific Foundation**
+
+FlashGenie v1.5 is built on proven cognitive science research:
+
+- **Spaced Repetition**: Based on Ebbinghaus forgetting curve and SM-2 algorithm
+- **Adaptive Difficulty**: Implements desirable difficulties theory (Bjork, 1994)
+- **Context-Dependent Learning**: Leverages environmental context research
+- **Metacognition**: Confidence-based learning and self-assessment
+- **Knowledge Graphs**: Semantic network theory and concept mapping
+- **Gamification**: Motivation and engagement research
+
+## 📚 **Documentation**
+
+### **Complete Documentation**
+- **[User Guide](docs_v1.5/user-guide/)**: Comprehensive learning paths for all users
+- **[Developer Guide](docs_v1.5/developer-guide/)**: API reference and contribution guidelines
+- **[Learning Science](docs_v1.5/learning-science/)**: Research foundation and effectiveness
+
+### **Quick References**
+- **[Getting Started](docs_v1.5/user-guide/getting-started.md)**: Step-by-step setup and first use
+- **[Smart Features](docs_v1.5/user-guide/smart-features.md)**: AI-powered capabilities
+- **[Advanced Usage](docs_v1.5/user-guide/advanced-usage.md)**: Power-user techniques
+- **[API Reference](docs_v1.5/developer-guide/api-reference.md)**: Complete technical documentation
+
+## 🤝 **Contributing**
+
+We welcome contributions from the community! FlashGenie is open source and thrives on collaboration.
+
+### **How to Contribute**
+1. **Fork the repository** on GitHub
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes** following our coding standards
+4. **Add tests** for new functionality
+5. **Update documentation** as needed
+6. **Submit a pull request** with a clear description
+
+### **Development Setup**
+```bash
+# Clone your fork
+git clone https://github.com/yourusername/FlashGenie.git
+cd FlashGenie
+
+# Install development dependencies
+pip install -r requirements.txt
+pip install -r dev-requirements.txt
+
+# Run tests
+python -m pytest tests/
+
+# Build documentation
+mkdocs serve
+```
+
+### **Contribution Areas**
+- 🐛 **Bug fixes** and performance improvements
+- ✨ **New features** and AI enhancements
+- 📚 **Documentation** improvements and translations
+- 🧪 **Testing** and quality assurance
+- 🎨 **UI/UX** improvements and accessibility
+- 🔬 **Research** integration and algorithm improvements
+
+## 📄 **License**
+
+FlashGenie is open source software licensed under the [MIT License](LICENSE). This means you can:
+
+- ✅ Use it for personal and commercial projects
+- ✅ Modify and distribute the code
+- ✅ Include it in proprietary software
+- ✅ Sell applications that include FlashGenie
+
+## 🙏 **Acknowledgments**
+
+FlashGenie v1.5 builds upon decades of research in cognitive science, spaced repetition, and learning analytics. We thank:
+
+- **Hermann Ebbinghaus** for foundational memory research
+- **Piotr Wozniak** for the SM-2 algorithm
+- **Robert Bjork** for desirable difficulties theory
+- **The open source community** for tools and inspiration
+- **Our contributors** who make FlashGenie better every day
+
+## 📞 **Support & Community**
+
+### **Get Help**
+- 📖 **Documentation**: Comprehensive guides and tutorials
+- 💬 **GitHub Discussions**: Community Q&A and feature requests
+- 🐛 **GitHub Issues**: Bug reports and technical issues
+- 📧 **Email**: Direct support for complex issues
+
+### **Stay Connected**
+- ⭐ **Star us on GitHub** to show your support
+- 👀 **Watch releases** to stay updated
+- 🍴 **Fork the project** to contribute
+- 📢 **Share FlashGenie** with fellow learners
 
 ---
 
-**Transform your learning with FlashGenie's intelligent, adaptive flashcard system!** 🧞‍♂️✨
+**Transform your learning with FlashGenie v1.5 - Where AI meets education!** 🧞‍♂️✨
 
-*FlashGenie v1.0 - Where artificial intelligence meets learning science to create the ultimate study companion.*
+*Made with ❤️ by the FlashGenie community*
