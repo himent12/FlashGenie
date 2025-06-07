@@ -9,8 +9,8 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 
-from flashgenie.core.flashcard import Flashcard
-from flashgenie.core.deck import Deck
+from flashgenie.core.content_system.flashcard import Flashcard
+from flashgenie.core.content_system.deck import Deck
 from flashgenie.utils.exceptions import ImportError, ValidationError
 
 

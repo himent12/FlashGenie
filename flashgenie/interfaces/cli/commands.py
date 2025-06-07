@@ -9,10 +9,10 @@ from typing import List, Dict, Any, Optional, Callable
 from pathlib import Path
 import sys
 
-from flashgenie.core.deck import Deck
-from flashgenie.core.quiz_engine import QuizEngine, QuizMode
-from flashgenie.core.tag_manager import TagManager
-from flashgenie.core.smart_collections import SmartCollectionManager
+from flashgenie.core.content_system.deck import Deck
+from flashgenie.core.study_system.quiz_engine import QuizEngine, QuizMode
+from flashgenie.core.content_system.tag_manager import TagManager
+from flashgenie.core.content_system.smart_collections import SmartCollectionManager
 from flashgenie.data.storage import DataStorage
 from flashgenie.data.importers.csv_importer import CSVImporter
 from flashgenie.data.importers.txt_importer import TXTImporter

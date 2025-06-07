@@ -10,8 +10,8 @@ from typing import List, Dict, Any, Optional
 from pathlib import Path
 
 from flashgenie.data.importers.base_importer import BaseImporter
-from flashgenie.core.flashcard import Flashcard
-from flashgenie.core.deck import Deck
+from flashgenie.core.content_system.flashcard import Flashcard
+from flashgenie.core.content_system.deck import Deck
 from flashgenie.utils.exceptions import ImportError, ValidationError
 from flashgenie.config import CSV_CONFIG
 

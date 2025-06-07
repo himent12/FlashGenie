@@ -11,7 +11,7 @@ from flashgenie.utils.exceptions import FlashGenieError
 
 def handle_plugins_command(args) -> None:
     """Handle the plugins command."""
-    from flashgenie.core.plugin_manager import PluginManager
+    from flashgenie.core.plugin_system_core.plugin_manager import PluginManager
     
     try:
         plugin_manager = PluginManager()
@@ -346,7 +346,7 @@ def _handle_pdk_package(pdk, plugin_path, output_dir):
 
 def handle_marketplace_command(args) -> None:
     """Handle the marketplace command."""
-    from flashgenie.core.plugin_manager import PluginManager
+    from flashgenie.core.plugin_system_core.plugin_manager import PluginManager
     from flashgenie.core.plugin_system import PluginType
     
     try:
