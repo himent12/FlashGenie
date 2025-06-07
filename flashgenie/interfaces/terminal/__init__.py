@@ -1,5 +1,5 @@
 """
-Enhanced Terminal Interface for FlashGenie v1.8.3.
+Enhanced Terminal Interface for FlashGenie v1.8.4.
 
 This module provides a rich, interactive terminal interface using the Rich library
 for beautiful formatting, responsive layouts, and enhanced user experience.
@@ -38,6 +38,6 @@ __all__ = [
 ]
 
 # Version info
-__version__ = "1.8.3"
+__version__ = "1.8.4"
 __author__ = "FlashGenie Development Team"
 __description__ = "Enhanced Terminal Interface for FlashGenie"

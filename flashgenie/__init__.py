@@ -1,5 +1,5 @@
 """
-FlashGenie v1.8.3 - Revolutionary Rich Terminal Interface
+FlashGenie v1.8.4 - Revolutionary Rich Terminal Interface with Enhanced Interactive Shell
 
 An advanced flashcard application with adaptive spaced repetition algorithms,
 smart difficulty adjustment, and world-class Rich Terminal UI.
@@ -20,7 +20,7 @@ Features:
 - Achievement system
 """
 
-__version__ = "1.8.3"
+__version__ = "1.8.4"
 __author__ = "FlashGenie Team"
 __email__ = "huckflower@gmail.com"
 

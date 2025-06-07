@@ -1,8 +1,8 @@
-# 🧞‍♂️ FlashGenie v1.8.3 - Complete Command Reference
+# 🧞‍♂️ FlashGenie v1.8.4 - Complete Command Reference
 
 **Comprehensive guide to all FlashGenie commands with Rich Terminal UI**
 
-This document provides detailed information about every command available in FlashGenie v1.8.3, including syntax, parameters, examples, and expected output with the new Rich Terminal Interface.
+This document provides detailed information about every command available in FlashGenie v1.8.4, including syntax, parameters, examples, and expected output with the Rich Terminal Interface and Enhanced Interactive Shell.
 
 ## 📋 **Table of Contents**
 
@@ -49,7 +49,7 @@ python -m flashgenie help deck_management
 **Expected Output:**
 ```
 ╭─ Welcome to FlashGenie ─────────────────────────────────────────╮
-│ 🧞‍♂️ FlashGenie v1.8.3 - Command Reference                      │
+│ 🧞‍♂️ FlashGenie v1.8.4 - Command Reference                      │
 ╰─────────────────────────────────────────────────────────────────╯
 
 ╭─ 🚀 Quick Start ───────────────────────────────────────────────╮

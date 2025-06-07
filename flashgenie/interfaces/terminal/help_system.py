@@ -1,5 +1,5 @@
 """
-Enhanced Help System for FlashGenie v1.8.3.
+Enhanced Help System for FlashGenie v1.8.4.
 
 This module provides a comprehensive, searchable help system with Rich Terminal UI
 integration, contextual assistance, and categorized command reference.
@@ -292,7 +292,7 @@ class HelpSystem:
         """Show the main help menu with Rich formatting."""
         # Welcome header
         welcome_text = Text()
-        welcome_text.append("🧞‍♂️ FlashGenie v1.8.3 - Command Reference", style="bold bright_blue")
+        welcome_text.append("🧞‍♂️ FlashGenie v1.8.4 - Command Reference", style="bold bright_blue")
         
         welcome_panel = Panel(
             welcome_text,

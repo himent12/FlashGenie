@@ -1,6 +1,6 @@
 # 🧞‍♂️ FlashGenie Documentation
 
-Welcome to the comprehensive documentation for **FlashGenie v1.8.0** - the intelligent flashcard application with a complete plugin ecosystem that revolutionizes learning through adaptive spaced repetition, smart difficulty adjustment, and advanced organization features.
+Welcome to the comprehensive documentation for **FlashGenie v1.8.4** - the intelligent flashcard application with Rich Terminal UI and enhanced interactive shell that revolutionizes learning through adaptive spaced repetition, smart difficulty adjustment, and advanced organization features.
 
 ## 🚀 **What is FlashGenie?**
 
@@ -30,16 +30,19 @@ FlashGenie is more than just a flashcard app. It's an intelligent learning platf
     **Smart Collections**
     : Dynamic card grouping by difficulty, performance, tags, and timing
 
-=== "💻 Rich Interface"
+=== "💻 Rich Terminal UI (v1.8.4)"
 
-    **Interactive CLI**
-    : Full-featured terminal interface with colors and progress tracking
-    
-    **Real-Time Feedback**
-    : Immediate difficulty adjustments with clear explanations
-    
-    **Comprehensive Commands**
-    : 10+ commands for complete flashcard management
+    **Rich Interactive Shell**
+    : Beautiful Rich Terminal UI in both standalone and interactive modes
+
+    **Enhanced Accessibility**
+    : Screen reader support, high contrast, and keyboard navigation
+
+    **Comprehensive Help System**
+    : Searchable command reference with contextual assistance
+
+    **Developer Tools**
+    : Rich debug console and performance monitoring
 
 ## 🎯 **Quick Navigation**
 
@@ -85,6 +88,14 @@ FlashGenie is more than just a flashcard app. It's an intelligent learning platf
 
     [:octicons-arrow-right-24: Plugin Guide](plugins/README.md)
 
+-   :material-palette: **Rich Terminal UI (v1.8.4)**
+
+    ---
+
+    Beautiful Rich Terminal UI with enhanced interactive shell and comprehensive help.
+
+    [:octicons-arrow-right-24: Rich UI Guide](v1.8.4-rich-interactive-shell.md)
+
 </div>
 
 ## 🎮 **Try FlashGenie Now**
@@ -116,22 +127,38 @@ FlashGenie is more than just a flashcard app. It's an intelligent learning platf
 
 ### Your First Smart Study Session
 
-```bash
-# 1. Import your flashcards
-python -m flashgenie import my_flashcards.csv --name "My Study Deck"
+=== "Rich Interactive Shell (v1.8.4)"
 
-# 2. Auto-tag for better organization
-python -m flashgenie autotag
+    ```bash
+    # Start the beautiful Rich interactive shell
+    python -m flashgenie
 
-# 3. Start an adaptive quiz with confidence tracking
-python -m flashgenie quiz "My Study Deck"
+    # All commands now use Rich Terminal UI!
+    FlashGenie > help                    # Rich help system
+    FlashGenie > import my_flashcards.csv --name "My Study Deck"
+    FlashGenie > list                    # Rich deck tables
+    FlashGenie > quiz "My Study Deck"    # Start learning
+    FlashGenie > stats                   # Rich analytics
+    ```
 
-# 4. Explore smart collections
-python -m flashgenie collections
+=== "Standalone Commands"
 
-# 5. View enhanced analytics
-python -m flashgenie stats
-```
+    ```bash
+    # 1. Import your flashcards
+    python -m flashgenie import my_flashcards.csv --name "My Study Deck"
+
+    # 2. Auto-tag for better organization
+    python -m flashgenie autotag
+
+    # 3. Start an adaptive quiz with confidence tracking
+    python -m flashgenie quiz "My Study Deck"
+
+    # 4. Explore smart collections
+    python -m flashgenie collections
+
+    # 5. View enhanced analytics
+    python -m flashgenie stats
+    ```
 
 ## 🌟 **What Makes FlashGenie Special**
 

@@ -2,7 +2,7 @@
 Core command handlers for FlashGenie CLI.
 
 This module contains handlers for basic FlashGenie operations like import, quiz, list, stats, and export.
-Enhanced for v1.8.3 with Rich Terminal UI.
+Enhanced for v1.8.4 with Rich Terminal UI and Interactive Shell.
 """
 
 import sys
@@ -36,7 +36,7 @@ def handle_help_command(args) -> None:
             help_system.show_main_help()
     else:
         # Fallback help
-        print("FlashGenie v1.8.3 - Intelligent Flashcard Learning")
+        print("FlashGenie v1.8.4 - Intelligent Flashcard Learning")
         print("=" * 50)
         print("Available commands:")
         print("  help     - Show this help message")

@@ -1,6 +1,6 @@
 # 🚀 FlashGenie Help System - Quick Reference
 
-**Essential help commands for FlashGenie v1.8.3**
+**Essential help commands for FlashGenie v1.8.4**
 
 ## 🔰 **Basic Help Commands**
 
@@ -11,6 +11,15 @@
 | `help CATEGORY` | Show category commands | `python -m flashgenie help basic` |
 | `search QUERY` | Search commands | `python -m flashgenie search quiz` |
 | `version` | Show version info | `python -m flashgenie version` |
+
+## 🎮 **Rich Interactive Shell (v1.8.4)**
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `python -m flashgenie` | Start Rich interactive shell | All commands use Rich UI! |
+| `FlashGenie > help` | Rich help in interactive mode | Beautiful Rich help system |
+| `FlashGenie > list` | Rich deck tables | Rich tables with summaries |
+| `FlashGenie > search quiz` | Rich search in shell | Rich search results |
 
 ## 📋 **Command Categories**
 

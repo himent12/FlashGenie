@@ -1,5 +1,5 @@
 """
-Performance Optimization System for FlashGenie v1.8.3.
+Performance Optimization System for FlashGenie v1.8.4.
 
 This module provides comprehensive performance monitoring, optimization,
 and resource management for the Rich Terminal UI.

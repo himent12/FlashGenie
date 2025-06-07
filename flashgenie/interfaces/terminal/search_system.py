@@ -1,5 +1,5 @@
 """
-Advanced Search and Filtering System for FlashGenie v1.8.3.
+Advanced Search and Filtering System for FlashGenie v1.8.4.
 
 This module provides fuzzy search, real-time filtering, and advanced
 search capabilities for the Rich Terminal UI.

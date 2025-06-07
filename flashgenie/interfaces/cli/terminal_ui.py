@@ -1,5 +1,5 @@
 """
-Terminal-based user interface for FlashGenie v1.8.3.
+Terminal-based user interface for FlashGenie v1.8.4.
 
 This module provides the main terminal interface for interacting
 with FlashGenie through the command line. Enhanced with Rich UI framework.
@@ -24,7 +24,7 @@ except ImportError:
 
 class TerminalUI:
     """
-    Main terminal user interface for FlashGenie v1.8.3.
+    Main terminal user interface for FlashGenie v1.8.4.
 
     Provides an interactive command-line interface for managing
     flashcards, importing data, and running quiz sessions.
