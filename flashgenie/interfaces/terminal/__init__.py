@@ -22,6 +22,7 @@ from .accessibility import AccessibilityManager
 from .performance_optimizer import PerformanceOptimizer
 from .help_system import HelpSystem
 from .rich_quiz_interface import RichQuizInterface
+from .rich_statistics_dashboard import RichStatisticsDashboard
 
 __all__ = [
     "RichTerminalUI",
@@ -36,7 +37,8 @@ __all__ = [
     "AccessibilityManager",
     "PerformanceOptimizer",
     "HelpSystem",
-    "RichQuizInterface"
+    "RichQuizInterface",
+    "RichStatisticsDashboard"
 ]
 
 # Version info

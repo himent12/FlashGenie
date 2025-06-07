@@ -22,6 +22,7 @@ from flashgenie.utils.exceptions import FlashGenieError
 try:
     from ..terminal import RichTerminalUI, HelpSystem
     from ..terminal.rich_quiz_interface import RichQuizInterface
+    from ..terminal.rich_statistics_dashboard import RichStatisticsDashboard
     RICH_UI_AVAILABLE = True
 except ImportError:
     RICH_UI_AVAILABLE = False
@@ -498,19 +499,83 @@ Examples:
         return True
     
     def show_stats(self, args: List[str] = None) -> bool:
-        """Show statistics (placeholder)."""
-        if self.current_deck is None:
-            if self.rich_ui:
-                self.rich_ui.show_error("No deck loaded. Use 'load' command first.", "No Deck Loaded")
+        """Show Rich statistics dashboard with comprehensive analytics."""
+        # Parse arguments
+        show_detailed = False
+        show_global = False
+        show_trends = False
+        show_performance = False
+
+        if args:
+            for arg in args:
+                if arg.lower() in ['--detailed', '-d']:
+                    show_detailed = True
+                elif arg.lower() in ['--global', '-g']:
+                    show_global = True
+                elif arg.lower() in ['--trends', '-t']:
+                    show_trends = True
+                elif arg.lower() in ['--performance', '-p']:
+                    show_performance = True
+
+        if self.rich_ui and RICH_UI_AVAILABLE:
+            try:
+                stats_dashboard = RichStatisticsDashboard(self.rich_ui.console)
+
+                if show_global:
+                    # Show global statistics across all decks
+                    all_decks = self.storage.list_decks()
+                    deck_objects = []
+                    for deck_info in all_decks:
+                        try:
+                            deck = self.storage.load_deck_by_name(deck_info['name'])
+                            if deck:
+                                deck_objects.append(deck)
+                        except Exception:
+                            continue
+
+                    stats_dashboard.show_global_statistics(deck_objects)
+
+                elif show_trends and self.current_deck:
+                    # Show learning trends for current deck
+                    stats_dashboard.show_learning_trends(self.current_deck, days=30)
+
+                elif show_performance and self.current_deck:
+                    # Show performance analysis for current deck
+                    stats_dashboard.show_performance_analysis(self.current_deck)
+
+                elif self.current_deck:
+                    # Show deck-specific statistics
+                    stats_dashboard.show_deck_statistics(self.current_deck, detailed=show_detailed)
+
+                else:
+                    # No deck loaded, show global stats
+                    self.rich_ui.show_warning("No deck loaded. Showing global statistics...", "No Deck")
+                    all_decks = self.storage.list_decks()
+                    deck_objects = []
+                    for deck_info in all_decks:
+                        try:
+                            deck = self.storage.load_deck_by_name(deck_info['name'])
+                            if deck:
+                                deck_objects.append(deck)
+                        except Exception:
+                            continue
+
+                    if deck_objects:
+                        stats_dashboard.show_global_statistics(deck_objects)
+                    else:
+                        self.rich_ui.show_info("No decks found. Import some flashcards to see statistics!", "No Data")
+
+            except Exception as e:
+                self.rich_ui.show_error(f"Statistics error: {e}", "Stats Error")
+        else:
+            # Fallback to basic stats
+            if self.current_deck:
+                print(f"Basic statistics for '{self.current_deck.name}':")
+                print(f"  Total cards: {len(self.current_deck.flashcards)}")
+                print(f"  Due for review: {self.current_deck.due_count}")
             else:
                 print("No deck loaded. Use 'load' command first.")
-            return True
-        
-        if self.rich_ui:
-            self.rich_ui.show_info(f"Statistics for '{self.current_deck.name}' will be implemented in the full version", "Stats Placeholder")
-        else:
-            print(f"Statistics for '{self.current_deck.name}' will be implemented in the full version")
-        
+
         return True
     
     def show_collections(self, args: List[str] = None) -> bool:
