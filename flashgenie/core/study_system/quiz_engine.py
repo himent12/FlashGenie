@@ -484,7 +484,7 @@ class QuizEngine:
             if due_cards:
                 available_cards = due_cards
             # Sort by priority (most overdue first)
-            available_cards.sort(key=lambda c: c.next_review_date or datetime.now())
+            available_cards.sort(key=lambda c: c.next_review or datetime.now())
 
         elif mode == QuizMode.DIFFICULT_FIRST:
             # Sort by difficulty (hardest first)
