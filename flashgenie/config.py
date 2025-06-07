@@ -11,7 +11,7 @@ from typing import Dict, Any
 
 # Application settings
 APP_NAME = "FlashGenie"
-APP_VERSION = "1.8.0"
+APP_VERSION = "1.8.2"
 
 # File paths
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -22,8 +22,20 @@ EXPORTS_DIR = DATA_DIR / "exports"
 IMPORTS_DIR = DATA_DIR / "imports"
 
 # Ensure data directories exist
-for directory in [DATA_DIR, DECKS_DIR, SESSIONS_DIR, EXPORTS_DIR, IMPORTS_DIR]:
-    directory.mkdir(parents=True, exist_ok=True)
+try:
+    for directory in [DATA_DIR, DECKS_DIR, SESSIONS_DIR, EXPORTS_DIR, IMPORTS_DIR]:
+        directory.mkdir(parents=True, exist_ok=True)
+except PermissionError:
+    # Fallback to user directory if we can't create in project directory
+    import tempfile
+    DATA_DIR = Path(tempfile.gettempdir()) / "flashgenie"
+    DECKS_DIR = DATA_DIR / "decks"
+    SESSIONS_DIR = DATA_DIR / "sessions"
+    EXPORTS_DIR = DATA_DIR / "exports"
+    IMPORTS_DIR = DATA_DIR / "imports"
+
+    for directory in [DATA_DIR, DECKS_DIR, SESSIONS_DIR, EXPORTS_DIR, IMPORTS_DIR]:
+        directory.mkdir(parents=True, exist_ok=True)
 
 # Spaced repetition algorithm settings
 SPACED_REPETITION_CONFIG: Dict[str, Any] = {
@@ -74,4 +86,36 @@ LOGGING_CONFIG: Dict[str, Any] = {
     "level": "INFO",
     "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     "log_file": DATA_DIR / "flashgenie.log",
+    "max_file_size": 10 * 1024 * 1024,  # 10MB
+    "backup_count": 5,
+}
+
+# Performance settings
+PERFORMANCE_CONFIG: Dict[str, Any] = {
+    "enable_monitoring": True,
+    "cache_size": 1000,
+    "memory_threshold_mb": 500,
+    "execution_time_threshold": 1.0,
+    "auto_optimize_memory": True,
+    "lazy_loading": True,
+    "batch_size": 100,
+}
+
+# Security settings
+SECURITY_CONFIG: Dict[str, Any] = {
+    "enable_input_validation": True,
+    "max_file_size_mb": 100,
+    "allowed_file_extensions": [".csv", ".txt", ".json"],
+    "enable_plugin_sandboxing": True,
+    "max_plugin_memory_mb": 50,
+    "plugin_timeout_seconds": 30,
+}
+
+# Plugin system settings
+PLUGIN_CONFIG: Dict[str, Any] = {
+    "plugin_dir": DATA_DIR / "plugins",
+    "marketplace_url": "https://plugins.flashgenie.com",
+    "auto_update_plugins": False,
+    "enable_hot_reload": True,
+    "max_concurrent_plugins": 10,
 }

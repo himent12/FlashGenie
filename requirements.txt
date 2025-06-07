@@ -1,4 +1,4 @@
-# FlashGenie v1.5 Dependencies
+# FlashGenie v1.8.2 Dependencies
 # Core dependencies for intelligent spaced repetition learning platform
 
 # Data processing and analysis
