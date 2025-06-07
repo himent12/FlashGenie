@@ -23,6 +23,7 @@ try:
     from ..terminal import RichTerminalUI, HelpSystem
     from ..terminal.rich_quiz_interface import RichQuizInterface
     from ..terminal.rich_statistics_dashboard import RichStatisticsDashboard
+    from ..terminal.rich_ai_interface import RichAIInterface
     RICH_UI_AVAILABLE = True
 except ImportError:
     RICH_UI_AVAILABLE = False
@@ -73,6 +74,10 @@ class RichCommandHandler:
             'accessibility': self.configure_accessibility,
             'debug': self.toggle_debug,
             'performance': self.show_performance,
+            'ai': self.ai_features,
+            'generate': self.ai_generate_content,
+            'suggest': self.ai_suggest_content,
+            'enhance': self.ai_enhance_cards,
             'exit': self.exit_app,
             'quit': self.exit_app,
         }
@@ -602,6 +607,143 @@ Examples:
             print("Tag management will be implemented in the full version")
         return True
     
+    def ai_features(self, args: List[str] = None) -> bool:
+        """Show AI features menu and capabilities."""
+        if not self.rich_ui or not RICH_UI_AVAILABLE:
+            print("AI features require Rich Terminal UI")
+            return True
+
+        # Show AI features overview
+        ai_content = []
+        ai_content.append("🤖 [bold bright_blue]AI-Powered Features[/bold bright_blue]")
+        ai_content.append("")
+        ai_content.append("✨ [bold]Available AI Features:[/bold]")
+        ai_content.append("  🎯 [bright_cyan]generate[/bright_cyan] - Generate flashcards from text")
+        ai_content.append("  💡 [bright_cyan]suggest[/bright_cyan] - Get related content suggestions")
+        ai_content.append("  🔧 [bright_cyan]enhance[/bright_cyan] - Enhance existing flashcards")
+        ai_content.append("  🎯 [bright_cyan]ai predict[/bright_cyan] - Predict card difficulty")
+        ai_content.append("")
+        ai_content.append("🚀 [bold]AI Capabilities:[/bold]")
+        ai_content.append("  • Intelligent content extraction from text")
+        ai_content.append("  • Automatic difficulty prediction")
+        ai_content.append("  • Smart tag generation")
+        ai_content.append("  • Related content suggestions")
+        ai_content.append("  • Flashcard enhancement recommendations")
+        ai_content.append("")
+        ai_content.append("💡 [dim]Example: 'generate' to create cards from text[/dim]")
+
+        from rich.panel import Panel
+        ai_panel = Panel(
+            "\n".join(ai_content),
+            title="🤖 AI Features",
+            border_style="bright_blue",
+            padding=(1, 2)
+        )
+
+        self.rich_ui.console.print(ai_panel)
+        return True
+
+    def ai_generate_content(self, args: List[str] = None) -> bool:
+        """Generate flashcards from text using AI."""
+        if not self.rich_ui or not RICH_UI_AVAILABLE:
+            print("AI generation requires Rich Terminal UI")
+            return True
+
+        try:
+            ai_interface = RichAIInterface(self.rich_ui.console)
+
+            # Get text input
+            if args and len(args) > 0:
+                # Text provided as arguments
+                text = " ".join(args)
+            else:
+                # Get text from user
+                text = self.rich_ui.console.input("\n[bold bright_yellow]Enter text to generate flashcards from:[/bold bright_yellow]\n")
+
+            if not text.strip():
+                self.rich_ui.show_warning("No text provided for generation", "AI Generation")
+                return True
+
+            # Get deck name
+            deck_name = self.rich_ui.console.input("\n[bold bright_cyan]Deck name (default: AI Generated Deck):[/bold bright_cyan] ") or "AI Generated Deck"
+
+            # Generate flashcards
+            generated_deck = ai_interface.generate_flashcards_from_text(text, deck_name)
+
+            if generated_deck:
+                # Save the generated deck
+                self.storage.save_deck(generated_deck)
+                self.current_deck = generated_deck
+                self.rich_ui.show_success(f"Generated deck '{deck_name}' with {len(generated_deck.flashcards)} cards!", "AI Generation Complete")
+
+        except Exception as e:
+            self.rich_ui.show_error(f"AI generation error: {e}", "AI Error")
+
+        return True
+
+    def ai_suggest_content(self, args: List[str] = None) -> bool:
+        """Get AI suggestions for related content."""
+        if not self.current_deck:
+            if self.rich_ui:
+                self.rich_ui.show_error("No deck loaded. Use 'load' command first.", "No Deck Loaded")
+            else:
+                print("No deck loaded. Use 'load' command first.")
+            return True
+
+        if not self.rich_ui or not RICH_UI_AVAILABLE:
+            print("AI suggestions require Rich Terminal UI")
+            return True
+
+        try:
+            ai_interface = RichAIInterface(self.rich_ui.console)
+
+            # Get suggestion count
+            count = 5
+            if args and len(args) > 0:
+                try:
+                    count = int(args[0])
+                    count = max(1, min(count, 20))  # Limit between 1 and 20
+                except ValueError:
+                    pass
+
+            # Generate suggestions
+            suggestions = ai_interface.suggest_related_content(self.current_deck, count)
+
+            if suggestions:
+                self.rich_ui.show_success(f"Generated {len(suggestions)} content suggestions!", "AI Suggestions")
+
+        except Exception as e:
+            self.rich_ui.show_error(f"AI suggestion error: {e}", "AI Error")
+
+        return True
+
+    def ai_enhance_cards(self, args: List[str] = None) -> bool:
+        """Enhance existing flashcards with AI suggestions."""
+        if not self.current_deck:
+            if self.rich_ui:
+                self.rich_ui.show_error("No deck loaded. Use 'load' command first.", "No Deck Loaded")
+            else:
+                print("No deck loaded. Use 'load' command first.")
+            return True
+
+        if not self.rich_ui or not RICH_UI_AVAILABLE:
+            print("AI enhancement requires Rich Terminal UI")
+            return True
+
+        try:
+            ai_interface = RichAIInterface(self.rich_ui.console)
+
+            # Enhance cards
+            results = ai_interface.enhance_existing_cards(self.current_deck)
+
+            if results:
+                self.rich_ui.show_success(f"Enhanced {results.get('applied', 0)} cards with AI suggestions!", "AI Enhancement Complete")
+
+        except Exception as e:
+            self.rich_ui.show_error(f"AI enhancement error: {e}", "AI Error")
+
+        return True
+
     def exit_app(self, args: List[str] = None) -> bool:
         """Exit the application."""
         if self.rich_ui:
