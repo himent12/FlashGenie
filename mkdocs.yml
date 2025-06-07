@@ -1,0 +1,179 @@
+# FlashGenie Documentation Configuration
+# MkDocs configuration for interactive user manual and comprehensive documentation
+
+site_name: FlashGenie Documentation
+site_description: Comprehensive documentation for FlashGenie - The intelligent flashcard application with adaptive spaced repetition
+site_author: FlashGenie Team
+site_url: https://himent12.github.io/FlashGenie
+
+# Repository information
+repo_name: himent12/FlashGenie
+repo_url: https://github.com/himent12/FlashGenie
+edit_uri: edit/main/docs/
+
+# Copyright
+copyright: Copyright &copy; 2024 FlashGenie Team
+
+# Configuration
+theme:
+  name: material
+  language: en
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.indexes
+    - toc.follow
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - content.tooltips
+    - content.action.edit
+    - content.action.view
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+
+# Plugins
+plugins:
+  - search:
+      lang: en
+  - git-revision-date-localized:
+      enable_creation_date: true
+  - minify:
+      minify_html: true
+  - social:
+      cards_layout_options:
+        background_color: "#673ab7"
+
+# Extensions
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:materialx.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: himent12
+      repo: FlashGenie
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Page tree
+nav:
+  - Home: index.md
+  - User Guide:
+    - user-guide/index.md
+    - Getting Started: user-guide/getting-started.md
+    - Smart Features: user-guide/smart-features.md
+    - Advanced Usage: user-guide/advanced-usage.md
+    - Troubleshooting: user-guide/troubleshooting.md
+    - Best Practices: user-guide/best-practices.md
+  - Developer Guide:
+    - developer-guide/index.md
+    - API Reference: developer-guide/api-reference.md
+    - Plugin Development: developer-guide/plugin-development.md
+    - Architecture: developer-guide/architecture.md
+    - Contributing: developer-guide/contributing.md
+    - Testing: developer-guide/testing.md
+  - Learning Science:
+    - learning-science/index.md
+    - Spaced Repetition: learning-science/spaced-repetition.md
+    - Difficulty Adaptation: learning-science/difficulty-adaptation.md
+    - Memory Formation: learning-science/memory-formation.md
+    - Study Strategies: learning-science/study-strategies.md
+  - Analytics Guide:
+    - analytics/index.md
+    - Understanding Stats: analytics/understanding-stats.md
+    - Progress Tracking: analytics/progress-tracking.md
+    - Performance Optimization: analytics/performance-optimization.md
+    - Data Export: analytics/data-export.md
+  - Community:
+    - community/index.md
+    - Code of Conduct: community/code-of-conduct.md
+    - Support: community/support.md
+    - Changelog: community/changelog.md
+
+# Extra
+extra:
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/himent12/FlashGenie
+    - icon: fontawesome/solid/paper-plane
+      link: mailto:huckflower@gmail.com
+  analytics:
+    provider: google
+    property: !ENV GOOGLE_ANALYTICS_KEY
+  consent:
+    title: Cookie consent
+    description: >- 
+      We use cookies to recognize your repeated visits and preferences, as well
+      as to measure the effectiveness of our documentation and whether users
+      find what they're searching for. With your consent, you're helping us to
+      make our documentation better.
+
+# Additional CSS
+extra_css:
+  - stylesheets/extra.css
+
+# Additional JavaScript
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

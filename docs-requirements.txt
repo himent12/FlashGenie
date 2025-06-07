@@ -1,0 +1,18 @@
+# Documentation requirements for FlashGenie v1.5
+# Install with: pip install -r docs-requirements.txt
+
+# Core MkDocs
+mkdocs>=1.5.0
+mkdocs-material>=9.4.0
+
+# Plugins for enhanced functionality
+mkdocs-git-revision-date-localized-plugin>=1.2.0
+mkdocs-minify-plugin>=0.7.0
+mkdocs-social>=0.3.0
+
+# Extensions for rich content
+pymdown-extensions>=10.3.0
+
+# Additional utilities
+pillow>=10.0.0  # For social cards
+cairosvg>=2.7.0  # For SVG processing
