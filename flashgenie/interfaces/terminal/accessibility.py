@@ -1,5 +1,5 @@
 """
-Accessibility System for FlashGenie v1.8.3.
+Accessibility System for FlashGenie v1.8.4.
 
 This module provides comprehensive accessibility features including screen reader support,
 keyboard navigation, audio feedback, and visual accessibility options.

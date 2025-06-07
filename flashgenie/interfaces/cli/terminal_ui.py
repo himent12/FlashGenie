@@ -1,5 +1,5 @@
 """
-Terminal-based user interface for FlashGenie v1.8.3.
+Terminal-based user interface for FlashGenie v1.8.4.
 
 This module provides the main terminal interface for interacting
 with FlashGenie through the command line. Enhanced with Rich UI framework.
@@ -10,6 +10,7 @@ from typing import List, Optional
 from pathlib import Path
 
 from flashgenie.interfaces.cli.commands import CommandHandler
+from flashgenie.interfaces.cli.rich_command_handler import RichCommandHandler
 from flashgenie.interfaces.cli.formatters import OutputFormatter
 from flashgenie.config import APP_NAME, APP_VERSION
 
@@ -23,7 +24,7 @@ except ImportError:
 
 class TerminalUI:
     """
-    Main terminal user interface for FlashGenie v1.8.3.
+    Main terminal user interface for FlashGenie v1.8.4.
 
     Provides an interactive command-line interface for managing
     flashcards, importing data, and running quiz sessions.
@@ -38,7 +39,6 @@ class TerminalUI:
             use_rich_ui: Whether to use Rich UI framework (falls back to basic if unavailable)
         """
         self.formatter = OutputFormatter()
-        self.command_handler = CommandHandler()
         self.running = False
 
         # Initialize Rich UI if available and requested
@@ -46,8 +46,12 @@ class TerminalUI:
         if self.use_rich_ui:
             self.rich_ui = RichTerminalUI()
             self.rich_ui.navigation.push_context("home", "FlashGenie Home")
+            # Use Rich command handler for enhanced experience
+            self.command_handler = RichCommandHandler(self.rich_ui)
         else:
             self.rich_ui = None
+            # Fallback to basic command handler
+            self.command_handler = CommandHandler()
     
     def start(self) -> None:
         """Start the terminal interface with enhanced UI."""
@@ -98,7 +102,20 @@ class TerminalUI:
     def show_welcome(self) -> None:
         """Display welcome message and basic information with enhanced UI."""
         if self.use_rich_ui:
+            # Rich welcome screen with enhanced features
             self.rich_ui.show_welcome_screen()
+
+            # Show quick start tips
+            self.rich_ui.show_info(
+                "💡 Quick Start: Type 'help' for commands, 'list' to see decks, or 'import FILE' to get started",
+                "Getting Started"
+            )
+
+            # Show Rich UI features
+            self.rich_ui.show_success(
+                "🎨 Rich Terminal UI enabled! Enjoy beautiful formatting and enhanced accessibility",
+                "Rich UI Active"
+            )
         else:
             # Fallback to basic welcome
             welcome_text = f"""
@@ -108,13 +125,23 @@ Welcome to FlashGenie - Your intelligent flashcard companion!
 
 {self.formatter.info("Type 'help' for available commands")}
 {self.formatter.info("Type 'import <file>' to get started with your flashcards")}
+{self.formatter.info("Note: Rich Terminal UI not available - using basic interface")}
             """
             print(welcome_text)
     
     def get_command_input(self) -> str:
-        """Get command input from user."""
-        prompt = f"{self.formatter.highlight('FlashGenie')} > "
-        return input(prompt).strip()
+        """Get command input from user with Rich Terminal UI."""
+        if self.use_rich_ui:
+            # Rich prompt with enhanced styling
+            from rich.prompt import Prompt
+            return Prompt.ask(
+                "[bold bright_cyan]FlashGenie[/bold bright_cyan] [bright_white]>[/bright_white]",
+                console=self.rich_ui.console
+            ).strip()
+        else:
+            # Fallback prompt
+            prompt = f"{self.formatter.highlight('FlashGenie')} > "
+            return input(prompt).strip()
     
     def run_interactive_import(self) -> None:
         """Run interactive import wizard."""

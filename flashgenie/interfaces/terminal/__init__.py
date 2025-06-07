@@ -1,5 +1,5 @@
 """
-Enhanced Terminal Interface for FlashGenie v1.8.3.
+Enhanced Terminal Interface for FlashGenie v1.8.4.
 
 This module provides a rich, interactive terminal interface using the Rich library
 for beautiful formatting, responsive layouts, and enhanced user experience.
@@ -20,6 +20,7 @@ from .debug_console import DebugConsole
 from .search_system import FuzzySearchEngine, InteractiveSearchInterface
 from .accessibility import AccessibilityManager
 from .performance_optimizer import PerformanceOptimizer
+from .help_system import HelpSystem
 
 __all__ = [
     "RichTerminalUI",
@@ -32,10 +33,11 @@ __all__ = [
     "FuzzySearchEngine",
     "InteractiveSearchInterface",
     "AccessibilityManager",
-    "PerformanceOptimizer"
+    "PerformanceOptimizer",
+    "HelpSystem"
 ]
 
 # Version info
-__version__ = "1.8.3"
+__version__ = "1.8.4"
 __author__ = "FlashGenie Development Team"
 __description__ = "Enhanced Terminal Interface for FlashGenie"

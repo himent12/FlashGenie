@@ -2,7 +2,7 @@
 Core command handlers for FlashGenie CLI.
 
 This module contains handlers for basic FlashGenie operations like import, quiz, list, stats, and export.
-Enhanced for v1.8.3 with Rich Terminal UI.
+Enhanced for v1.8.4 with Rich Terminal UI and Interactive Shell.
 """
 
 import sys
@@ -12,10 +12,113 @@ from flashgenie.utils.exceptions import FlashGenieError
 # Rich UI components for enhanced terminal interface
 try:
     from ...terminal import RichTerminalUI
+    from ...terminal.help_system import HelpSystem
     RICH_UI_AVAILABLE = True
 except ImportError:
     RICH_UI_AVAILABLE = False
     print("Warning: Rich UI not available, falling back to basic terminal interface")
+
+
+def handle_help_command(args) -> None:
+    """Handle the help command with Rich Terminal UI."""
+    if RICH_UI_AVAILABLE:
+        ui = RichTerminalUI()
+        help_system = HelpSystem(ui.console)
+
+        if hasattr(args, 'command') and args.command:
+            # Show help for specific command
+            help_system.show_command_help(args.command)
+        elif hasattr(args, 'category') and args.category:
+            # Show help for category
+            help_system.show_category_help(args.category)
+        else:
+            # Show main help menu
+            help_system.show_main_help()
+    else:
+        # Fallback help
+        print("FlashGenie v1.8.4 - Intelligent Flashcard Learning")
+        print("=" * 50)
+        print("Available commands:")
+        print("  help     - Show this help message")
+        print("  version  - Show version information")
+        print("  list     - List all flashcard decks")
+        print("  import   - Import flashcards from file")
+        print("  export   - Export flashcard deck")
+        print("  quiz     - Start a quiz session")
+        print("  stats    - Show statistics")
+        print("")
+        print("Use 'python -m flashgenie COMMAND --help' for command-specific help")
+
+
+def handle_search_command(args) -> None:
+    """Handle the search command for finding commands."""
+    if RICH_UI_AVAILABLE:
+        ui = RichTerminalUI()
+        help_system = HelpSystem(ui.console)
+        help_system.search_commands(args.query)
+    else:
+        print(f"Search functionality requires Rich Terminal UI")
+        print("Available commands: help, version, list, import, export, quiz, stats")
+
+
+def handle_accessibility_command(args) -> None:
+    """Handle accessibility configuration command."""
+    if RICH_UI_AVAILABLE:
+        ui = RichTerminalUI()
+
+        if hasattr(args, 'enable') and args.enable:
+            ui.enable_accessibility_mode(args.enable)
+        elif hasattr(args, 'disable') and args.disable:
+            ui.disable_accessibility_mode(args.disable)
+        elif hasattr(args, 'status') and args.status:
+            ui.show_accessibility_menu()
+        elif hasattr(args, 'test') and args.test:
+            # Test accessibility features
+            ui.show_info("Testing accessibility features...", "Accessibility Test")
+            ui.announce("Screen reader test announcement")
+            ui.show_success("Accessibility test completed", "Test Complete")
+        else:
+            ui.show_accessibility_menu()
+    else:
+        print("Accessibility features require Rich Terminal UI")
+
+
+def handle_debug_command(args) -> None:
+    """Handle debug mode command."""
+    if RICH_UI_AVAILABLE:
+        ui = RichTerminalUI()
+
+        if hasattr(args, 'enable') and args.enable:
+            ui.toggle_debug_mode()
+            ui.show_success("Debug mode enabled", "Debug")
+        elif hasattr(args, 'disable') and args.disable:
+            ui.debug_mode = False
+            ui.show_info("Debug mode disabled", "Debug")
+        elif hasattr(args, 'console') and args.console:
+            ui.show_debug_panel()
+        else:
+            ui.toggle_debug_mode()
+    else:
+        print("Debug features require Rich Terminal UI")
+
+
+def handle_performance_command(args) -> None:
+    """Handle performance monitoring command."""
+    if RICH_UI_AVAILABLE:
+        ui = RichTerminalUI()
+
+        if hasattr(args, 'dashboard') and args.dashboard:
+            ui.show_performance_dashboard()
+        elif hasattr(args, 'optimize') and args.optimize:
+            result = ui.optimize_performance()
+            ui.show_success(f"Performance optimized: {result.get('memory_freed_mb', 0):.1f}MB freed", "Optimization")
+        elif hasattr(args, 'monitor') and args.monitor:
+            ui.show_info("Performance monitoring enabled", "Performance")
+            ui.show_performance_dashboard()
+        else:
+            ui.show_performance_dashboard()
+    else:
+        print("Performance features require Rich Terminal UI")
 
 
 def handle_import_command(args) -> None:

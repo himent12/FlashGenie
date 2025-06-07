@@ -1,5 +1,5 @@
 """
-Rich Terminal UI Framework for FlashGenie v1.8.3.
+Rich Terminal UI Framework for FlashGenie v1.8.4.
 
 This module provides an enhanced terminal interface using the Rich library
 for beautiful formatting, layouts, and interactive elements.
@@ -67,7 +67,7 @@ class RichTerminalUI:
         """Display the FlashGenie welcome screen."""
         welcome_text = Text()
         welcome_text.append("🧞‍♂️ ", style="bright_blue")
-        welcome_text.append("FlashGenie v1.8.3", style="bold bright_blue")
+        welcome_text.append("FlashGenie v1.8.4", style="bold bright_blue")
         welcome_text.append("\n\nIntelligent Flashcard Learning Platform", style="bright_white")
         welcome_text.append("\nEnhanced Terminal Interface", style="dim")
 

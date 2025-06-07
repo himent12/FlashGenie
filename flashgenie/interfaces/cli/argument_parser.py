@@ -38,16 +38,60 @@ def create_argument_parser() -> argparse.ArgumentParser:
     # Subcommands
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
     
+    # Help and utility commands
+    _add_help_commands(subparsers)
+
     # Core commands
     _add_core_commands(subparsers)
-    
+
     # Advanced learning commands
     _add_advanced_commands(subparsers)
-    
+
     # Plugin system commands
     _add_plugin_commands(subparsers)
     
     return parser
+
+
+def _add_help_commands(subparsers):
+    """Add help and utility commands."""
+    # Help command
+    help_parser = subparsers.add_parser('help', help='Show comprehensive help with Rich Terminal UI')
+    help_parser.add_argument('command', nargs='?', help='Specific command to get help for')
+    help_parser.add_argument('--category', help='Show commands in specific category')
+
+    # Search command
+    search_parser = subparsers.add_parser('search', help='Search commands by name or description')
+    search_parser.add_argument('query', help='Search term or phrase')
+    search_parser.add_argument('--category', help='Limit search to specific category')
+    search_parser.add_argument('--exact', action='store_true', help='Exact match only')
+
+    # Version command (enhanced)
+    version_parser = subparsers.add_parser('version', help='Show version and system information')
+    version_parser.add_argument('--detailed', action='store_true', help='Show detailed system information')
+
+    # Accessibility command
+    accessibility_parser = subparsers.add_parser('accessibility', help='Configure accessibility features')
+    accessibility_parser.add_argument('--enable', choices=['screen_reader', 'high_contrast', 'large_text', 'audio'],
+                                     help='Enable accessibility mode')
+    accessibility_parser.add_argument('--disable', choices=['screen_reader', 'high_contrast', 'large_text', 'audio'],
+                                     help='Disable accessibility mode')
+    accessibility_parser.add_argument('--status', action='store_true', help='Show accessibility status')
+    accessibility_parser.add_argument('--test', action='store_true', help='Test accessibility features')
+
+    # Debug command
+    debug_parser = subparsers.add_parser('debug', help='Debug mode and developer tools')
+    debug_parser.add_argument('--enable', action='store_true', help='Enable debug mode')
+    debug_parser.add_argument('--disable', action='store_true', help='Disable debug mode')
+    debug_parser.add_argument('--console', action='store_true', help='Show debug console')
+    debug_parser.add_argument('--level', choices=['debug', 'info', 'warning', 'error'], help='Set debug level')
+
+    # Performance command
+    performance_parser = subparsers.add_parser('performance', help='Performance monitoring and optimization')
+    performance_parser.add_argument('--dashboard', action='store_true', help='Show performance dashboard')
+    performance_parser.add_argument('--optimize', action='store_true', help='Run performance optimization')
+    performance_parser.add_argument('--monitor', action='store_true', help='Start performance monitoring')
+    performance_parser.add_argument('--profile', help='Profile specific command')
 
 
 def _add_core_commands(subparsers):

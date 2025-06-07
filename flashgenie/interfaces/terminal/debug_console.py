@@ -1,5 +1,5 @@
 """
-Developer Tools and Debug Console for FlashGenie v1.8.3.
+Developer Tools and Debug Console for FlashGenie v1.8.4.
 
 This module provides interactive debugging tools, performance monitoring,
 and development utilities for the Rich Terminal UI.
@@ -136,7 +136,7 @@ class DebugConsole:
         
         debug_panel = Panel(
             layout,
-            title="🐛 Debug Console - FlashGenie v1.8.3",
+            title="🐛 Debug Console - FlashGenie v1.8.4",
             border_style="bright_magenta",
             padding=(1, 2)
         )
