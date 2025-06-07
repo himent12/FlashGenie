@@ -10,8 +10,8 @@ from typing import List, Dict, Any, Optional
 from pathlib import Path
 from datetime import datetime
 
-from flashgenie.core.deck import Deck
-from flashgenie.core.flashcard import Flashcard
+from flashgenie.core.content_system.deck import Deck
+from flashgenie.core.content_system.flashcard import Flashcard
 from flashgenie.utils.exceptions import StorageError
 from flashgenie.config import DECKS_DIR, DATA_DIR
 

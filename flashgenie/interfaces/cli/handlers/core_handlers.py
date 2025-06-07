@@ -12,7 +12,7 @@ from flashgenie.utils.exceptions import FlashGenieError
 def handle_import_command(args) -> None:
     """Handle the import command."""
     from flashgenie.data.storage import DataStorage
-    from flashgenie.data.importers import CSVImporter, TextImporter
+    from flashgenie.data.importers import CSVImporter, TXTImporter
     
     storage = DataStorage()
     
@@ -32,7 +32,7 @@ def handle_import_command(args) -> None:
         if format_type == 'csv':
             importer = CSVImporter()
         elif format_type in ['txt', 'text']:
-            importer = TextImporter()
+            importer = TXTImporter()
         else:
             print(f"Error: Unsupported file format '{format_type}'")
             print("Supported formats: csv, txt")
@@ -55,8 +55,8 @@ def handle_import_command(args) -> None:
 def handle_quiz_command(args) -> None:
     """Handle the quiz command."""
     from flashgenie.data.storage import DataStorage
-    from flashgenie.core.quiz_engine import QuizEngine
-    from flashgenie.interfaces.terminal_ui import TerminalUI
+    from flashgenie.core.study_system.quiz_engine import QuizEngine
+    from flashgenie.interfaces.cli.terminal_ui import TerminalUI
     
     storage = DataStorage()
     
@@ -173,7 +173,8 @@ def handle_list_command(args) -> None:
 def handle_stats_command(args) -> None:
     """Handle the stats command."""
     from flashgenie.data.storage import DataStorage
-    from flashgenie.core.analytics import AnalyticsEngine
+    # Analytics engine not available in current structure
+    # from flashgenie.core.analytics import AnalyticsEngine
     
     storage = DataStorage()
     
@@ -222,15 +223,17 @@ def handle_stats_command(args) -> None:
             
             # Analytics if available
             try:
-                analytics = AnalyticsEngine()
-                analytics_data = analytics.generate_deck_analytics(deck)
-                
-                if analytics_data:
-                    print(f"\n📈 **Learning Analytics**")
-                    print(f"Study sessions: {analytics_data.get('total_sessions', 0)}")
-                    print(f"Total study time: {analytics_data.get('total_time', 0)} minutes")
-                    print(f"Average accuracy: {analytics_data.get('average_accuracy', 0):.1%}")
-                    
+                # Analytics engine not available in current structure
+                # analytics = AnalyticsEngine()
+                # analytics_data = analytics.generate_deck_analytics(deck)
+
+                # if analytics_data:
+                #     print(f"\n📈 **Learning Analytics**")
+                #     print(f"Study sessions: {analytics_data.get('total_sessions', 0)}")
+                #     print(f"Total study time: {analytics_data.get('total_time', 0)} minutes")
+                #     print(f"Average accuracy: {analytics_data.get('average_accuracy', 0):.1%}")
+                pass
+
             except Exception:
                 # Analytics not available or failed
                 pass
