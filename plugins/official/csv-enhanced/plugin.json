@@ -1,0 +1,42 @@
+{
+  "name": "csv-enhanced",
+  "version": "1.0.0", 
+  "description": "Enhanced CSV importer with advanced parsing, validation, and auto-tagging capabilities",
+  "author": "FlashGenie Team",
+  "license": "MIT",
+  "flashgenie_version": ">=1.6.0",
+  "type": "importer",
+  "entry_point": "EnhancedCSVImporter",
+  "permissions": ["file_read", "deck_write"],
+  "dependencies": ["pandas>=1.5.0"],
+  "settings_schema": {
+    "auto_detect_encoding": {
+      "type": "boolean",
+      "default": true,
+      "description": "Automatically detect file encoding"
+    },
+    "smart_column_mapping": {
+      "type": "boolean", 
+      "default": true,
+      "description": "Intelligently map columns to flashcard fields"
+    },
+    "validate_content": {
+      "type": "boolean",
+      "default": true,
+      "description": "Validate flashcard content during import"
+    },
+    "auto_tag_from_filename": {
+      "type": "boolean",
+      "default": true,
+      "description": "Generate tags from filename"
+    },
+    "skip_duplicates": {
+      "type": "boolean",
+      "default": true,
+      "description": "Skip duplicate flashcards during import"
+    }
+  },
+  "homepage": "https://github.com/himent12/FlashGenie",
+  "repository": "https://github.com/himent12/FlashGenie", 
+  "tags": ["importer", "csv", "data", "official"]
+}

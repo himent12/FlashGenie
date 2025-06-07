@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any
 from dataclasses import dataclass
 
-from flashgenie.core.flashcard import Flashcard
+from ..content_system.flashcard import Flashcard
 from flashgenie.config import SPACED_REPETITION_CONFIG
 
 

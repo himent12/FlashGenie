@@ -1,0 +1,54 @@
+{
+  "name": "advanced-analytics",
+  "version": "1.0.0",
+  "description": "Advanced learning analytics with research-grade metrics and insights",
+  "author": "FlashGenie Team",
+  "license": "MIT",
+  "flashgenie_version": ">=1.7.0",
+  "type": "analytics",
+  "entry_point": "AdvancedAnalyticsPlugin",
+  "permissions": ["deck_read", "user_data", "file_write"],
+  "dependencies": [],
+  "settings_schema": {
+    "analysis_depth": {
+      "type": "string",
+      "enum": ["basic", "detailed", "research"],
+      "default": "detailed",
+      "description": "Depth of analytics analysis"
+    },
+    "include_predictions": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include predictive analytics in reports"
+    },
+    "export_format": {
+      "type": "string",
+      "enum": ["json", "csv", "html"],
+      "default": "html",
+      "description": "Default export format for analytics reports"
+    },
+    "retention_analysis": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include memory retention analysis"
+    },
+    "learning_curve_analysis": {
+      "type": "boolean",
+      "default": true,
+      "description": "Analyze learning curves and patterns"
+    },
+    "comparative_analysis": {
+      "type": "boolean",
+      "default": false,
+      "description": "Compare performance across different decks"
+    },
+    "anonymize_data": {
+      "type": "boolean",
+      "default": true,
+      "description": "Anonymize data in exported reports"
+    }
+  },
+  "homepage": "https://github.com/himent12/FlashGenie",
+  "repository": "https://github.com/himent12/FlashGenie",
+  "tags": ["analytics", "research", "insights", "metrics", "official"]
+}

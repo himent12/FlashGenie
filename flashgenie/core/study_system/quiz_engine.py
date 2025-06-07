@@ -12,10 +12,10 @@ from enum import Enum
 import time
 import uuid
 
-from flashgenie.core.flashcard import Flashcard
-from flashgenie.core.deck import Deck
-from flashgenie.core.spaced_repetition import SpacedRepetitionAlgorithm, ReviewResult
-from flashgenie.core.difficulty_analyzer import DifficultyAnalyzer, ConfidenceLevel
+from ..content_system.flashcard import Flashcard
+from ..content_system.deck import Deck
+from .spaced_repetition import SpacedRepetitionAlgorithm, ReviewResult
+from ..content_system.difficulty_analyzer import DifficultyAnalyzer, ConfidenceLevel
 from flashgenie.config import QUIZ_CONFIG
 
 

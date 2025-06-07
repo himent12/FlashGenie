@@ -1,6 +1,6 @@
 # 🧞‍♂️ FlashGenie Documentation
 
-Welcome to the comprehensive documentation for **FlashGenie v1.0** - the intelligent flashcard application that revolutionizes learning through adaptive spaced repetition, smart difficulty adjustment, and advanced organization features.
+Welcome to the comprehensive documentation for **FlashGenie v1.8.0** - the intelligent flashcard application with a complete plugin ecosystem that revolutionizes learning through adaptive spaced repetition, smart difficulty adjustment, and advanced organization features.
 
 ## 🚀 **What is FlashGenie?**
 
@@ -76,6 +76,14 @@ FlashGenie is more than just a flashcard app. It's an intelligent learning platf
     Understand the research and science behind FlashGenie's learning algorithms.
 
     [:octicons-arrow-right-24: Learning Science](learning-science/index.md)
+
+-   :material-puzzle: **Plugin System**
+
+    ---
+
+    Explore the complete plugin ecosystem with marketplace and development tools.
+
+    [:octicons-arrow-right-24: Plugin Guide](plugins/README.md)
 
 </div>
 

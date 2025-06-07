@@ -12,8 +12,8 @@ import json
 import csv
 from pathlib import Path
 
-from flashgenie.core.quiz_engine import QuizSession
-from flashgenie.core.deck import Deck
+from .quiz_engine import QuizSession
+from ..content_system.deck import Deck
 from flashgenie.config import SESSIONS_DIR
 
 

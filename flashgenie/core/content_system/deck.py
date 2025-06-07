@@ -12,7 +12,7 @@ import uuid
 import json
 from pathlib import Path
 
-from flashgenie.core.flashcard import Flashcard
+from .flashcard import Flashcard
 from flashgenie.config import DECKS_DIR
 
 
@@ -177,7 +177,7 @@ class Deck:
             Number of cards that received new tags
         """
         if tag_manager is None:
-            from flashgenie.core.tag_manager import TagManager
+            from .tag_manager import TagManager
             tag_manager = TagManager()
 
         tagged_count = 0
@@ -208,7 +208,7 @@ class Deck:
             List of cards matching the collection criteria
         """
         if collection_manager is None:
-            from flashgenie.core.smart_collections import SmartCollectionManager
+            from .smart_collections import SmartCollectionManager
             collection_manager = SmartCollectionManager()
 
         collection = collection_manager.get_collection(collection_name)
