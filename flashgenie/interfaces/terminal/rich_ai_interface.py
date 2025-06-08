@@ -196,15 +196,24 @@ class RichAIInterface:
         content.append("  • Smart tag generation")
         content.append("  • Quality confidence scoring")
         content.append("")
+
+        # Add helpful examples if the text looks like a file path or is very short
+        if len(text) < 50 or any(indicator in text for indicator in ['.csv', '.txt', '/', '\\']):
+            content.append("💡 [bold yellow]Tip:[/bold yellow] For best results, provide actual text content like:")
+            content.append("   • 'The speed of light is 299,792,458 m/s. Water boils at 100°C.'")
+            content.append("   • 'Python is a programming language. Variables store data.'")
+            content.append("   • 'Hola means hello. Gracias means thank you.'")
+            content.append("")
+
         content.append("⚡ The AI will analyze your text and generate relevant flashcards")
-        
+
         intro_panel = Panel(
             "\n".join(content),
             title="🤖 AI Content Generation",
             border_style="bright_blue",
             padding=(1, 2)
         )
-        
+
         self.console.print(intro_panel)
         self.console.print()
     

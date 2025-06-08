@@ -247,31 +247,42 @@ class AIContentGenerator:
             ]
         }
     
-    def _generate_with_patterns(self, text: str, content_type: ContentType, 
+    def _generate_with_patterns(self, text: str, content_type: ContentType,
                               max_cards: int) -> List[GeneratedContent]:
         """Generate content using pattern matching (fallback method)."""
         generated = []
+
+        # First, try to detect if this is a file path and provide helpful guidance
+        if self._is_likely_file_path(text):
+            return self._generate_example_content(content_type, max_cards)
+
+        # Get patterns for the content type
         patterns = self.content_patterns.get(content_type, [])
-        
+
+        # If no specific patterns, try general content extraction
+        if not patterns:
+            patterns = self._get_general_patterns()
+
         lines = text.split('\n')
         for line in lines:
             if len(generated) >= max_cards:
                 break
-                
+
             line = line.strip()
-            if not line:
+            if not line or len(line) < 5:  # Skip very short lines
                 continue
-            
+
+            # Try patterns for this content type
             for pattern in patterns:
                 match = re.search(pattern, line, re.IGNORECASE)
                 if match:
                     question = match.group(1).strip()
                     answer = match.group(2).strip()
-                    
+
                     if len(question) > 3 and len(answer) > 3:
                         difficulty = self.predict_difficulty(question, answer)
                         tags = self._generate_tags_from_content(question, answer)
-                        
+
                         generated.append(GeneratedContent(
                             question=question,
                             answer=answer,
@@ -282,8 +293,18 @@ class AIContentGenerator:
                             source="pattern_matching"
                         ))
                         break
-        
-        return generated
+
+            # If no pattern matched, try to create content from the line itself
+            if not generated or len(generated) < max_cards:
+                generated_from_line = self._generate_from_single_line(line, content_type)
+                if generated_from_line:
+                    generated.extend(generated_from_line)
+
+        # If still no content generated, provide examples
+        if not generated:
+            generated = self._generate_example_content(content_type, max_cards)
+
+        return generated[:max_cards]
     
     def _generate_with_ai_model(self, text: str, content_type: ContentType, 
                                max_cards: int) -> List[GeneratedContent]:
@@ -502,3 +523,145 @@ class AIContentGenerator:
             tags.append('advanced')
         
         return tags[:5]  # Return up to 5 tags
+
+    def _is_likely_file_path(self, text: str) -> bool:
+        """Check if the text looks like a file path."""
+        text = text.strip()
+        # Check for common file path indicators
+        if any(indicator in text for indicator in ['.csv', '.txt', '.json', '/', '\\', 'assets', 'data']):
+            return True
+        # Check if it's very short and doesn't contain spaces (likely a filename)
+        if len(text) < 50 and ' ' not in text and '.' in text:
+            return True
+        return False
+
+    def _get_general_patterns(self) -> List[str]:
+        """Get general patterns that work across content types."""
+        return [
+            r"(.+?)\s*[-–—]\s*(.+)",     # General dash separator
+            r"(.+?):\s*(.+)",            # General colon separator
+            r"(.+?)\s*=\s*(.+)",         # General equals separator
+            r"(.+?)\s+is\s+(.+)",        # General "is" separator
+            r"(.+?)\s+means\s+(.+)",     # General "means" separator
+            r"What\s+(.+?)\?\s*(.+)",    # Question format
+            r"(.+?)\s*\?\s*(.+)",        # Question mark separator
+        ]
+
+    def _generate_from_single_line(self, line: str, content_type: ContentType) -> List[GeneratedContent]:
+        """Generate content from a single line of text."""
+        generated = []
+
+        # Skip very short lines
+        if len(line) < 10:
+            return generated
+
+        # Try to create a question from the line
+        if content_type == ContentType.FACTS:
+            # Convert statements to questions
+            if any(word in line.lower() for word in ['is', 'was', 'are', 'were', 'has', 'have']):
+                question, answer = self._convert_statement_to_question(line)
+                if question and answer:
+                    generated.append(GeneratedContent(
+                        question=question,
+                        answer=answer,
+                        content_type=content_type,
+                        confidence=0.6,
+                        difficulty=self.predict_difficulty(question, answer),
+                        tags=self._generate_tags_from_content(question, answer),
+                        source="statement_conversion"
+                    ))
+
+        elif content_type == ContentType.VOCABULARY:
+            # Look for potential vocabulary words (capitalized words)
+            words = re.findall(r'\b[A-Z][a-z]+\b', line)
+            for word in words[:2]:  # Limit to 2 words per line
+                question = f"What does {word} mean?"
+                answer = f"[Definition of {word} - would be provided by user]"
+                generated.append(GeneratedContent(
+                    question=question,
+                    answer=answer,
+                    content_type=content_type,
+                    confidence=0.4,
+                    difficulty=0.5,
+                    tags=['vocabulary', word.lower()],
+                    source="vocabulary_extraction"
+                ))
+
+        return generated
+
+    def _convert_statement_to_question(self, statement: str) -> Tuple[Optional[str], Optional[str]]:
+        """Convert a statement into a question-answer pair."""
+        statement = statement.strip()
+
+        # Pattern: "X is Y" -> "What is X?" / "Y"
+        match = re.search(r'(.+?)\s+is\s+(.+)', statement, re.IGNORECASE)
+        if match:
+            subject = match.group(1).strip()
+            predicate = match.group(2).strip()
+            question = f"What is {subject}?"
+            return question, predicate
+
+        # Pattern: "X was Y" -> "What was X?" / "Y"
+        match = re.search(r'(.+?)\s+was\s+(.+)', statement, re.IGNORECASE)
+        if match:
+            subject = match.group(1).strip()
+            predicate = match.group(2).strip()
+            question = f"What was {subject}?"
+            return question, predicate
+
+        # Pattern: "X has Y" -> "What does X have?" / "Y"
+        match = re.search(r'(.+?)\s+has\s+(.+)', statement, re.IGNORECASE)
+        if match:
+            subject = match.group(1).strip()
+            predicate = match.group(2).strip()
+            question = f"What does {subject} have?"
+            return question, predicate
+
+        return None, None
+
+    def _generate_example_content(self, content_type: ContentType, max_cards: int) -> List[GeneratedContent]:
+        """Generate example content when no patterns match."""
+        examples = {
+            ContentType.FACTS: [
+                ("What is the capital of France?", "Paris", ["geography", "europe"]),
+                ("What is the speed of light?", "299,792,458 m/s", ["physics", "constants"]),
+                ("What is the largest planet?", "Jupiter", ["astronomy", "planets"]),
+            ],
+            ContentType.VOCABULARY: [
+                ("What does 'hello' mean?", "A greeting", ["vocabulary", "greetings"]),
+                ("What does 'thank you' mean?", "Expression of gratitude", ["vocabulary", "politeness"]),
+                ("What does 'please' mean?", "Polite request word", ["vocabulary", "politeness"]),
+            ],
+            ContentType.DEFINITIONS: [
+                ("What is photosynthesis?", "Process by which plants make food from sunlight", ["biology", "plants"]),
+                ("What is gravity?", "Force that attracts objects toward each other", ["physics", "forces"]),
+                ("What is democracy?", "Government by the people", ["politics", "government"]),
+            ],
+            ContentType.FORMULAS: [
+                ("Area of a circle?", "πr²", ["math", "geometry"]),
+                ("Pythagorean theorem?", "a² + b² = c²", ["math", "geometry"]),
+                ("Quadratic formula?", "x = (-b ± √(b²-4ac)) / 2a", ["math", "algebra"]),
+            ],
+            ContentType.QUESTIONS: [
+                ("Who wrote Romeo and Juliet?", "William Shakespeare", ["literature", "shakespeare"]),
+                ("When did World War II end?", "1945", ["history", "world-war"]),
+                ("Who painted the Mona Lisa?", "Leonardo da Vinci", ["art", "renaissance"]),
+            ]
+        }
+
+        example_set = examples.get(content_type, examples[ContentType.FACTS])
+        generated = []
+
+        for i, (question, answer, tags) in enumerate(example_set[:max_cards]):
+            generated.append(GeneratedContent(
+                question=question,
+                answer=answer,
+                content_type=content_type,
+                confidence=0.9,  # High confidence for examples
+                difficulty=self.predict_difficulty(question, answer),
+                tags=tags,
+                explanation=f"Example {content_type.value} flashcard",
+                source="examples"
+            ))
+
+        return generated

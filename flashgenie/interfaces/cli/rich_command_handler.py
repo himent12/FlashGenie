@@ -657,12 +657,30 @@ Examples:
                 # Text provided as arguments
                 text = " ".join(args)
             else:
+                # Show helpful examples first
+                self.rich_ui.console.print("\n💡 [bold bright_cyan]AI Content Generation Examples:[/bold bright_cyan]")
+                self.rich_ui.console.print("   • Facts: 'The speed of light is 299,792,458 m/s. Water boils at 100°C.'")
+                self.rich_ui.console.print("   • Vocabulary: 'Hello - greeting. Thank you - expression of gratitude.'")
+                self.rich_ui.console.print("   • Definitions: 'Photosynthesis is the process plants use to make food.'")
+                self.rich_ui.console.print("   • Formulas: 'Area of circle = πr². Pythagorean theorem: a² + b² = c²'")
+                self.rich_ui.console.print("")
+
                 # Get text from user
-                text = self.rich_ui.console.input("\n[bold bright_yellow]Enter text to generate flashcards from:[/bold bright_yellow]\n")
+                text = self.rich_ui.console.input("[bold bright_yellow]Enter text to generate flashcards from:[/bold bright_yellow]\n")
 
             if not text.strip():
                 self.rich_ui.show_warning("No text provided for generation", "AI Generation")
                 return True
+
+            # Check if user provided a file path and give helpful guidance
+            if any(indicator in text for indicator in ['.csv', '.txt', '.json', '/', '\\', 'assets']):
+                self.rich_ui.show_warning(
+                    f"It looks like you provided a file path: '{text}'\n\n"
+                    "The AI generator works with actual text content, not file paths.\n"
+                    "Please copy and paste the actual text content you want to convert to flashcards.\n\n"
+                    "For now, I'll generate some example flashcards to demonstrate the feature.",
+                    "File Path Detected"
+                )
 
             # Get deck name
             deck_name = self.rich_ui.console.input("\n[bold bright_cyan]Deck name (default: AI Generated Deck):[/bold bright_cyan] ") or "AI Generated Deck"
