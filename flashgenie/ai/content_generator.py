@@ -9,7 +9,7 @@ from typing import List, Dict, Any, Optional, Tuple
 import re
 import random
 from datetime import datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 from flashgenie.core.content_system.flashcard import Flashcard
@@ -46,6 +46,7 @@ class GeneratedContent:
     tags: List[str]
     explanation: Optional[str] = None
     source: Optional[str] = None
+    valid_answers: List[str] = field(default_factory=list)  # Multiple valid answers
 
 
 class AIContentGenerator:
@@ -283,6 +284,9 @@ class AIContentGenerator:
                         difficulty = self.predict_difficulty(question, answer)
                         tags = self._generate_tags_from_content(question, answer)
 
+                        # Generate multiple valid answers for better flexibility
+                        valid_answers = self._generate_multiple_answers(question, answer, content_type)
+
                         generated.append(GeneratedContent(
                             question=question,
                             answer=answer,
@@ -290,7 +294,8 @@ class AIContentGenerator:
                             confidence=0.8,  # Pattern matching confidence
                             difficulty=difficulty,
                             tags=tags,
-                            source="pattern_matching"
+                            source="pattern_matching",
+                            valid_answers=valid_answers
                         ))
                         break
 
@@ -561,6 +566,7 @@ class AIContentGenerator:
             if any(word in line.lower() for word in ['is', 'was', 'are', 'were', 'has', 'have']):
                 question, answer = self._convert_statement_to_question(line)
                 if question and answer:
+                    valid_answers = self._generate_multiple_answers(question, answer, content_type)
                     generated.append(GeneratedContent(
                         question=question,
                         answer=answer,
@@ -568,7 +574,8 @@ class AIContentGenerator:
                         confidence=0.6,
                         difficulty=self.predict_difficulty(question, answer),
                         tags=self._generate_tags_from_content(question, answer),
-                        source="statement_conversion"
+                        source="statement_conversion",
+                        valid_answers=valid_answers
                     ))
 
         elif content_type == ContentType.VOCABULARY:
@@ -577,6 +584,7 @@ class AIContentGenerator:
             for word in words[:2]:  # Limit to 2 words per line
                 question = f"What does {word} mean?"
                 answer = f"[Definition of {word} - would be provided by user]"
+                valid_answers = self._generate_multiple_answers(question, answer, content_type)
                 generated.append(GeneratedContent(
                     question=question,
                     answer=answer,
@@ -584,7 +592,8 @@ class AIContentGenerator:
                     confidence=0.4,
                     difficulty=0.5,
                     tags=['vocabulary', word.lower()],
-                    source="vocabulary_extraction"
+                    source="vocabulary_extraction",
+                    valid_answers=valid_answers
                 ))
 
         return generated
@@ -653,6 +662,7 @@ class AIContentGenerator:
         generated = []
 
         for i, (question, answer, tags) in enumerate(example_set[:max_cards]):
+            valid_answers = self._generate_multiple_answers(question, answer, content_type)
             generated.append(GeneratedContent(
                 question=question,
                 answer=answer,
@@ -661,7 +671,160 @@ class AIContentGenerator:
                 difficulty=self.predict_difficulty(question, answer),
                 tags=tags,
                 explanation=f"Example {content_type.value} flashcard",
-                source="examples"
+                source="examples",
+                valid_answers=valid_answers
             ))
 
         return generated
+
+    def _generate_multiple_answers(self, question: str, primary_answer: str, content_type: ContentType) -> List[str]:
+        """
+        Generate multiple valid answers for a question.
+
+        Args:
+            question: The question text
+            primary_answer: The primary answer
+            content_type: Type of content being generated
+
+        Returns:
+            List of valid answers including the primary answer
+        """
+        valid_answers = [primary_answer]
+
+        # Generate variations based on content type
+        if content_type == ContentType.VOCABULARY:
+            # For vocabulary, add common variations
+            variations = self._generate_vocabulary_variations(primary_answer)
+            valid_answers.extend(variations)
+
+        elif content_type == ContentType.DEFINITIONS:
+            # For definitions, add simplified and expanded versions
+            variations = self._generate_definition_variations(primary_answer)
+            valid_answers.extend(variations)
+
+        elif content_type == ContentType.FACTS:
+            # For facts, add alternative phrasings
+            variations = self._generate_fact_variations(primary_answer)
+            valid_answers.extend(variations)
+
+        elif content_type == ContentType.FORMULAS:
+            # For formulas, add equivalent representations
+            variations = self._generate_formula_variations(primary_answer)
+            valid_answers.extend(variations)
+
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_answers = []
+        for answer in valid_answers:
+            answer_lower = answer.lower().strip()
+            if answer_lower not in seen and answer.strip():
+                seen.add(answer_lower)
+                unique_answers.append(answer.strip())
+
+        return unique_answers[:5]  # Limit to 5 valid answers
+
+    def _generate_vocabulary_variations(self, answer: str) -> List[str]:
+        """Generate variations for vocabulary answers."""
+        variations = []
+
+        # Add "A " or "An " prefix variations
+        if not answer.lower().startswith(('a ', 'an ', 'the ')):
+            if answer[0].lower() in 'aeiou':
+                variations.append(f"An {answer.lower()}")
+            else:
+                variations.append(f"A {answer.lower()}")
+
+        # Add variations without articles
+        for article in ['a ', 'an ', 'the ']:
+            if answer.lower().startswith(article):
+                variations.append(answer[len(article):].strip())
+
+        # Add capitalized version
+        if answer != answer.capitalize():
+            variations.append(answer.capitalize())
+
+        return variations
+
+    def _generate_definition_variations(self, answer: str) -> List[str]:
+        """Generate variations for definition answers."""
+        variations = []
+
+        # Add "It is" prefix
+        if not answer.lower().startswith(('it is', 'this is', 'that is')):
+            variations.append(f"It is {answer.lower()}")
+
+        # Add "The process of" for process definitions
+        if 'process' in answer.lower() and not answer.lower().startswith('the process'):
+            variations.append(f"The process of {answer.lower()}")
+
+        # Add simplified version (remove extra words)
+        simplified = re.sub(r'\b(that|which|who|where|when)\b.*', '', answer, flags=re.IGNORECASE).strip()
+        if simplified != answer and len(simplified) > 3:
+            variations.append(simplified)
+
+        return variations
+
+    def _generate_fact_variations(self, answer: str) -> List[str]:
+        """Generate variations for factual answers."""
+        variations = []
+
+        # Add numeric variations (if contains numbers)
+        if re.search(r'\d', answer):
+            # Add version with commas in numbers
+            number_with_commas = re.sub(r'(\d)(?=(\d{3})+(?!\d))', r'\1,', answer)
+            if number_with_commas != answer:
+                variations.append(number_with_commas)
+
+            # Add version without commas
+            number_without_commas = re.sub(r'(\d),(\d)', r'\1\2', answer)
+            if number_without_commas != answer:
+                variations.append(number_without_commas)
+
+        # Add abbreviated versions for units
+        unit_abbreviations = {
+            'meters per second': 'm/s',
+            'kilometers per hour': 'km/h',
+            'degrees celsius': '°C',
+            'degrees fahrenheit': '°F',
+            'kilometers': 'km',
+            'meters': 'm',
+            'centimeters': 'cm',
+            'millimeters': 'mm'
+        }
+
+        for full_unit, abbrev in unit_abbreviations.items():
+            if full_unit in answer.lower():
+                variations.append(answer.lower().replace(full_unit, abbrev))
+            elif abbrev in answer:
+                variations.append(answer.replace(abbrev, full_unit))
+
+        return variations
+
+    def _generate_formula_variations(self, answer: str) -> List[str]:
+        """Generate variations for formula answers."""
+        variations = []
+
+        # Add variations with different spacing
+        if ' ' in answer:
+            variations.append(answer.replace(' ', ''))
+        else:
+            # Add spaced version for operators
+            spaced = re.sub(r'([+\-*/=])', r' \1 ', answer)
+            variations.append(spaced)
+
+        # Add variations with different notation
+        notation_variations = {
+            '²': '^2',
+            '³': '^3',
+            '×': '*',
+            '÷': '/',
+            'π': 'pi'
+        }
+
+        for original, replacement in notation_variations.items():
+            if original in answer:
+                variations.append(answer.replace(original, replacement))
+            elif replacement in answer:
+                variations.append(answer.replace(replacement, original))
+
+        return variations

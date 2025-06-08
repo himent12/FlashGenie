@@ -24,6 +24,7 @@ from rich.columns import Columns
 from flashgenie.core.content_system.flashcard import Flashcard
 from flashgenie.core.content_system.deck import Deck
 from flashgenie.core.study_system.quiz_engine import QuizEngine, QuizMode
+from flashgenie.utils.fuzzy_matching import FuzzyMatchResult, MatchType
 
 
 class QuizState(Enum):
@@ -309,23 +310,29 @@ class RichQuizInterface:
         input("Press Enter to continue...")
     
     def _process_answer_and_feedback(self, card: Flashcard, user_answer: str) -> None:
-        """Process answer and show Rich feedback."""
-        # Check if answer is correct
-        is_correct = self._check_answer(card.answer, user_answer)
-        
+        """Process answer and show Rich feedback with fuzzy matching support."""
+        # Check if answer is correct using enhanced matching
+        is_correct, fuzzy_result = self.quiz_engine._check_answer_enhanced(card, user_answer)
+
+        # Handle fuzzy matching suggestions
+        if not is_correct and fuzzy_result and self.quiz_engine.should_suggest(fuzzy_result):
+            suggestion_accepted = self._show_fuzzy_suggestion(fuzzy_result, user_answer)
+            if suggestion_accepted:
+                is_correct = True
+
         # Update stats
         if is_correct:
             self.session_stats['correct_answers'] += 1
         else:
             self.session_stats['incorrect_answers'] += 1
-        
+
         # Get confidence level
         confidence = self._get_confidence_level()
         self.session_stats['confidence_scores'].append(confidence.value)
-        
+
         # Show feedback
-        self._show_answer_feedback(card, user_answer, is_correct, confidence)
-        
+        self._show_answer_feedback(card, user_answer, is_correct, confidence, fuzzy_result)
+
         # Update card difficulty (placeholder for now)
         if hasattr(card, 'difficulty'):
             old_difficulty = card.difficulty
@@ -334,12 +341,50 @@ class RichQuizInterface:
                 card.difficulty = max(0.0, card.difficulty - 0.1)
             elif not is_correct:
                 card.difficulty = min(1.0, card.difficulty + 0.1)
-            
+
             if abs(card.difficulty - old_difficulty) > 0.05:
                 self.session_stats['difficulty_adjustments'] += 1
     
+    def _show_fuzzy_suggestion(self, fuzzy_result: FuzzyMatchResult, user_answer: str) -> bool:
+        """
+        Show fuzzy matching suggestion and get user confirmation.
+
+        Args:
+            fuzzy_result: The fuzzy matching result
+            user_answer: The user's original answer
+
+        Returns:
+            True if user accepts the suggestion, False otherwise
+        """
+        if not fuzzy_result.suggestion:
+            return False
+
+        # Create suggestion panel
+        suggestion_content = []
+        suggestion_content.append(f"🤔 Your answer: [bright_yellow]{user_answer}[/bright_yellow]")
+        suggestion_content.append(f"💡 {fuzzy_result.suggestion}")
+        suggestion_content.append("")
+        suggestion_content.append(f"📊 Match confidence: {fuzzy_result.confidence:.1%}")
+        suggestion_content.append(f"🎯 Match type: {fuzzy_result.match_type.value.replace('_', ' ').title()}")
+
+        suggestion_panel = Panel(
+            "\n".join(suggestion_content),
+            title="🔍 Fuzzy Match Suggestion",
+            border_style="bright_yellow",
+            padding=(1, 2)
+        )
+
+        self.console.print(suggestion_panel)
+
+        # Ask user if they accept the suggestion
+        return Confirm.ask(
+            "Accept this as correct?",
+            console=self.console,
+            default=True
+        )
+
     def _check_answer(self, correct_answer: str, user_answer: str) -> bool:
-        """Check if user answer is correct (simple string comparison for now)."""
+        """Legacy method - Check if user answer is correct (simple string comparison)."""
         return correct_answer.lower().strip() == user_answer.lower().strip()
     
     def _get_confidence_level(self) -> ConfidenceLevel:
@@ -362,27 +407,48 @@ class RichQuizInterface:
             except (ValueError, KeyError):
                 self.console.print("[red]Please enter a number from 1 to 5[/red]")
     
-    def _show_answer_feedback(self, card: Flashcard, user_answer: str, 
-                            is_correct: bool, confidence: ConfidenceLevel) -> None:
-        """Show Rich feedback for the answer."""
+    def _show_answer_feedback(self, card: Flashcard, user_answer: str,
+                            is_correct: bool, confidence: ConfidenceLevel,
+                            fuzzy_result: Optional[FuzzyMatchResult] = None) -> None:
+        """Show Rich feedback for the answer with enhanced information."""
         # Create feedback content
         feedback_content = []
-        
+
         if is_correct:
             feedback_content.append("✅ [bold bright_green]Correct![/bold bright_green]")
             feedback_content.append(f"Your answer: [bright_green]{user_answer}[/bright_green]")
+
+            # Show fuzzy match information if applicable
+            if fuzzy_result and fuzzy_result.match_type != MatchType.EXACT:
+                if fuzzy_result.match_type == MatchType.CASE_INSENSITIVE:
+                    feedback_content.append("📝 [dim]Case-insensitive match[/dim]")
+                elif fuzzy_result.match_type in [MatchType.MINOR_TYPO, MatchType.MODERATE_TYPO]:
+                    feedback_content.append(f"🔍 [dim]Fuzzy match ({fuzzy_result.match_type.value.replace('_', ' ')})[/dim]")
+                    feedback_content.append(f"📊 [dim]Match confidence: {fuzzy_result.confidence:.1%}[/dim]")
         else:
             feedback_content.append("❌ [bold bright_red]Incorrect[/bold bright_red]")
             feedback_content.append(f"Your answer: [bright_red]{user_answer}[/bright_red]")
-            feedback_content.append(f"Correct answer: [bright_green]{card.answer}[/bright_green]")
-        
+
+            # Show all valid answers
+            if len(card.valid_answers) > 1:
+                feedback_content.append(f"✅ [bold]Valid answers:[/bold]")
+                for i, valid_answer in enumerate(card.valid_answers, 1):
+                    feedback_content.append(f"  {i}. [bright_green]{valid_answer}[/bright_green]")
+            else:
+                feedback_content.append(f"Correct answer: [bright_green]{card.answer}[/bright_green]")
+
+            # Show fuzzy match information if there was a close match
+            if fuzzy_result and fuzzy_result.confidence > 0.3:
+                feedback_content.append("")
+                feedback_content.append(f"🔍 [dim]Closest match: {fuzzy_result.matched_answer} ({fuzzy_result.confidence:.1%} confidence)[/dim]")
+
         feedback_content.append("")
         feedback_content.append(f"🎯 Confidence: {'⭐' * confidence.value} ({confidence.name.title()})")
-        
+
         # Show difficulty adjustment if applicable
         if hasattr(card, 'difficulty'):
             feedback_content.append(f"📊 Difficulty: {card.difficulty:.2f}")
-        
+
         # Create feedback panel
         border_style = "bright_green" if is_correct else "bright_red"
         feedback_panel = Panel(
@@ -391,9 +457,9 @@ class RichQuizInterface:
             border_style=border_style,
             padding=(1, 2)
         )
-        
+
         self.console.print(feedback_panel)
-        
+
         # Brief pause for user to read
         time.sleep(2)
     

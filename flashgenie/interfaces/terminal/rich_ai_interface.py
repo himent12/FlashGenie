@@ -333,6 +333,11 @@ class RichAIInterface:
                 tags=content.tags
             )
             flashcard.difficulty = content.difficulty
+
+            # Set multiple valid answers if available
+            if hasattr(content, 'valid_answers') and content.valid_answers:
+                flashcard.set_valid_answers(content.valid_answers)
+
             deck.add_flashcard(flashcard)
         
         return deck

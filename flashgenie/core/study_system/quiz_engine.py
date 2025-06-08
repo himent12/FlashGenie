@@ -6,7 +6,7 @@ between the spaced repetition algorithm and user interface.
 """
 
 from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any, Callable
+from typing import List, Optional, Dict, Any, Callable, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
 import time
@@ -17,6 +17,7 @@ from ..content_system.deck import Deck
 from .spaced_repetition import SpacedRepetitionAlgorithm, ReviewResult
 from ..content_system.difficulty_analyzer import DifficultyAnalyzer, ConfidenceLevel
 from flashgenie.config import QUIZ_CONFIG
+from flashgenie.utils.fuzzy_matching import FuzzyMatcher, FuzzyMatchResult, MatchType
 
 
 class QuizMode(Enum):
@@ -49,6 +50,8 @@ class QuizQuestion:
     correct: Optional[bool] = None
     quality: Optional[int] = None
     confidence: Optional[int] = None  # User confidence rating (1-5)
+    fuzzy_match_result: Optional[FuzzyMatchResult] = None  # Fuzzy matching details
+    accepted_answer: Optional[str] = None  # The valid answer that was matched
     
     @property
     def response_time(self) -> float:
@@ -164,6 +167,11 @@ class QuizEngine:
         self.difficulty_analyzer = DifficultyAnalyzer()
         self.current_session: Optional[QuizSession] = None
         self.answer_checker: Optional[Callable[[str, str], bool]] = None
+
+        # Initialize fuzzy matcher with configurable sensitivity
+        fuzzy_sensitivity = self.config.get("fuzzy_sensitivity", "medium")
+        self.fuzzy_matcher = FuzzyMatcher(sensitivity=fuzzy_sensitivity)
+        self.enable_fuzzy_matching = self.config.get("enable_fuzzy_matching", True)
     
     def start_session(self, deck: Deck, mode: QuizMode = QuizMode.SPACED_REPETITION,
                      max_questions: int = None) -> QuizSession:
@@ -257,9 +265,9 @@ class QuizEngine:
             return available_cards[0]
     
     def submit_answer(self, question: QuizQuestion, user_answer: str,
-                     quality: int = None, confidence: int = None) -> bool:
+                     quality: int = None, confidence: int = None) -> Tuple[bool, Optional[FuzzyMatchResult]]:
         """
-        Submit an answer for a quiz question.
+        Submit an answer for a quiz question with fuzzy matching support.
 
         Args:
             question: The quiz question being answered
@@ -268,18 +276,22 @@ class QuizEngine:
             confidence: Optional user confidence rating (1-5)
 
         Returns:
-            Whether the answer was correct
+            Tuple of (whether answer was correct, fuzzy match result if applicable)
         """
         question.end_time = datetime.now()
         question.user_answer = user_answer.strip()
         question.confidence = confidence
 
-        # Check if answer is correct
-        correct = self._check_answer(
-            question.flashcard.answer,
+        # Check if answer is correct using enhanced matching
+        correct, fuzzy_result = self._check_answer_enhanced(
+            question.flashcard,
             question.user_answer
         )
+
         question.correct = correct
+        question.fuzzy_match_result = fuzzy_result
+        if fuzzy_result and fuzzy_result.matched_answer:
+            question.accepted_answer = fuzzy_result.matched_answer
 
         # Determine quality if not provided
         if quality is None:
@@ -307,7 +319,7 @@ class QuizEngine:
 
         self.sr_algorithm.update_flashcard(question.flashcard, review_result)
 
-        return correct
+        return correct, fuzzy_result
 
     def _analyze_and_adjust_difficulty(self, flashcard: Flashcard, question: QuizQuestion) -> None:
         """
@@ -348,6 +360,43 @@ class QuizEngine:
                 old_difficulty, new_difficulty, performance
             )
             flashcard.update_difficulty(new_difficulty, explanation)
+
+    def _check_answer_enhanced(self, flashcard: Flashcard, user_answer: str) -> Tuple[bool, Optional[FuzzyMatchResult]]:
+        """
+        Check if the user's answer is correct using enhanced matching with fuzzy logic.
+
+        Args:
+            flashcard: The flashcard being answered
+            user_answer: The user's answer
+
+        Returns:
+            Tuple of (is_correct, fuzzy_match_result)
+        """
+        user_answer = user_answer.strip()
+
+        # First, try exact matching with all valid answers
+        if flashcard.is_answer_correct(user_answer, case_sensitive=False):
+            matched_answer = flashcard.get_matching_answer(user_answer, case_sensitive=False)
+            return True, FuzzyMatchResult(
+                match_type=MatchType.EXACT if user_answer == matched_answer else MatchType.CASE_INSENSITIVE,
+                matched_answer=matched_answer,
+                confidence=1.0,
+                distance=0
+            )
+
+        # If fuzzy matching is disabled, return False
+        if not self.enable_fuzzy_matching:
+            return False, None
+
+        # Try fuzzy matching
+        fuzzy_result = self.fuzzy_matcher.match_answer(user_answer, flashcard.valid_answers)
+
+        # Auto-accept if confidence is high enough
+        if self.fuzzy_matcher.should_auto_accept(fuzzy_result):
+            return True, fuzzy_result
+
+        # Return the fuzzy result for potential suggestion
+        return False, fuzzy_result
 
     def _check_answer(self, correct_answer: str, user_answer: str) -> bool:
         """
@@ -459,6 +508,39 @@ class QuizEngine:
             checker: Function that takes (correct_answer, user_answer) and returns bool
         """
         self.answer_checker = checker
+
+    def set_fuzzy_matching(self, enabled: bool, sensitivity: str = "medium") -> None:
+        """
+        Configure fuzzy matching settings.
+
+        Args:
+            enabled: Whether to enable fuzzy matching
+            sensitivity: Sensitivity level ("strict", "medium", "lenient")
+        """
+        self.enable_fuzzy_matching = enabled
+        if enabled:
+            self.fuzzy_matcher.set_sensitivity(sensitivity)
+
+    def get_fuzzy_suggestion(self, user_answer: str, flashcard: Flashcard) -> Optional[str]:
+        """
+        Get a fuzzy matching suggestion for a user's answer.
+
+        Args:
+            user_answer: The user's answer
+            flashcard: The flashcard being answered
+
+        Returns:
+            Suggestion string if available, None otherwise
+        """
+        if not self.enable_fuzzy_matching:
+            return None
+
+        fuzzy_result = self.fuzzy_matcher.match_answer(user_answer, flashcard.valid_answers)
+
+        if self.fuzzy_matcher.should_suggest(fuzzy_result):
+            return fuzzy_result.suggestion
+
+        return None
 
     def select_cards_for_quiz(self, deck: Deck, mode: QuizMode,
                              card_count: Optional[int] = None) -> List[Flashcard]:

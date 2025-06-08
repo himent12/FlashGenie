@@ -11,7 +11,7 @@ from typing import Dict, Any
 
 # Application settings
 APP_NAME = "FlashGenie"
-APP_VERSION = "1.8.4"
+APP_VERSION = "1.8.5"
 
 # File paths
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -53,6 +53,9 @@ QUIZ_CONFIG: Dict[str, Any] = {
     "show_progress": True,
     "case_sensitive": False,
     "allow_partial_answers": True,
+    # Fuzzy matching settings (v1.8.5)
+    "enable_fuzzy_matching": True,
+    "fuzzy_sensitivity": "medium",  # "strict", "medium", "lenient"
 }
 
 # File format settings
