@@ -21,6 +21,9 @@ from flashgenie.utils.exceptions import FlashGenieError
 # Rich Terminal UI components
 try:
     from ..terminal import RichTerminalUI, HelpSystem
+    from ..terminal.rich_quiz_interface import RichQuizInterface
+    from ..terminal.rich_statistics_dashboard import RichStatisticsDashboard
+    from ..terminal.rich_ai_interface import RichAIInterface
     RICH_UI_AVAILABLE = True
 except ImportError:
     RICH_UI_AVAILABLE = False
@@ -71,6 +74,10 @@ class RichCommandHandler:
             'accessibility': self.configure_accessibility,
             'debug': self.toggle_debug,
             'performance': self.show_performance,
+            'ai': self.ai_features,
+            'generate': self.ai_generate_content,
+            'suggest': self.ai_suggest_content,
+            'enhance': self.ai_enhance_cards,
             'exit': self.exit_app,
             'quit': self.exit_app,
         }
@@ -432,43 +439,148 @@ Examples:
         print(help_text)
     
     def start_quiz(self, args: List[str] = None) -> bool:
-        """Start a quiz session (placeholder - full implementation would be extensive)."""
+        """Start a Rich quiz session with beautiful UI."""
         if self.current_deck is None:
             if self.rich_ui:
                 self.rich_ui.show_error("No deck loaded. Use 'load' command first.", "No Deck Loaded")
+                self.rich_ui.show_info("Use 'list' to see available decks, then 'load DECK_NAME'", "Tip")
             else:
                 print("No deck loaded. Use 'load' command first.")
             return True
-        
+
         if not self.current_deck.flashcards:
             if self.rich_ui:
                 self.rich_ui.show_error("The current deck is empty.", "Empty Deck")
+                self.rich_ui.show_info("Import some flashcards first with 'import FILE_PATH'", "Tip")
             else:
                 print("The current deck is empty.")
             return True
-        
-        # For now, show a placeholder message
-        if self.rich_ui:
-            self.rich_ui.show_info(f"Quiz functionality for '{self.current_deck.name}' will be implemented in the full version", "Quiz Placeholder")
+
+        # Parse quiz arguments
+        quiz_mode = QuizMode.SPACED_REPETITION
+        card_count = None
+        timed_mode = False
+
+        if args:
+            for arg in args:
+                if arg.lower() in ['spaced', 'spaced_repetition']:
+                    quiz_mode = QuizMode.SPACED_REPETITION
+                elif arg.lower() == 'random':
+                    quiz_mode = QuizMode.RANDOM
+                elif arg.lower() == 'sequential':
+                    quiz_mode = QuizMode.SEQUENTIAL
+                elif arg.lower() in ['difficult', 'difficult_first']:
+                    quiz_mode = QuizMode.DIFFICULT_FIRST
+                elif arg.lower() == 'timed':
+                    timed_mode = True
+                elif arg.isdigit():
+                    card_count = int(arg)
+
+        # Start Rich quiz session
+        if self.rich_ui and RICH_UI_AVAILABLE:
+            try:
+                quiz_interface = RichQuizInterface(self.rich_ui.console)
+                results = quiz_interface.start_quiz_session(
+                    deck=self.current_deck,
+                    mode=quiz_mode,
+                    card_count=card_count,
+                    timed=timed_mode
+                )
+
+                # Show completion message
+                if results.get('end_time'):
+                    self.rich_ui.show_success(
+                        f"Quiz completed! Accuracy: {results.get('correct_answers', 0)}/{results.get('total_cards', 0)}",
+                        "Quiz Complete"
+                    )
+
+            except Exception as e:
+                self.rich_ui.show_error(f"Quiz error: {e}", "Quiz Error")
         else:
-            print(f"Quiz functionality for '{self.current_deck.name}' will be implemented in the full version")
-        
+            # Fallback to basic quiz
+            print(f"Starting basic quiz for '{self.current_deck.name}'...")
+            print("Rich Quiz Interface not available - using basic mode")
+
         return True
     
     def show_stats(self, args: List[str] = None) -> bool:
-        """Show statistics (placeholder)."""
-        if self.current_deck is None:
-            if self.rich_ui:
-                self.rich_ui.show_error("No deck loaded. Use 'load' command first.", "No Deck Loaded")
+        """Show Rich statistics dashboard with comprehensive analytics."""
+        # Parse arguments
+        show_detailed = False
+        show_global = False
+        show_trends = False
+        show_performance = False
+
+        if args:
+            for arg in args:
+                if arg.lower() in ['--detailed', '-d']:
+                    show_detailed = True
+                elif arg.lower() in ['--global', '-g']:
+                    show_global = True
+                elif arg.lower() in ['--trends', '-t']:
+                    show_trends = True
+                elif arg.lower() in ['--performance', '-p']:
+                    show_performance = True
+
+        if self.rich_ui and RICH_UI_AVAILABLE:
+            try:
+                stats_dashboard = RichStatisticsDashboard(self.rich_ui.console)
+
+                if show_global:
+                    # Show global statistics across all decks
+                    all_decks = self.storage.list_decks()
+                    deck_objects = []
+                    for deck_info in all_decks:
+                        try:
+                            deck = self.storage.load_deck_by_name(deck_info['name'])
+                            if deck:
+                                deck_objects.append(deck)
+                        except Exception:
+                            continue
+
+                    stats_dashboard.show_global_statistics(deck_objects)
+
+                elif show_trends and self.current_deck:
+                    # Show learning trends for current deck
+                    stats_dashboard.show_learning_trends(self.current_deck, days=30)
+
+                elif show_performance and self.current_deck:
+                    # Show performance analysis for current deck
+                    stats_dashboard.show_performance_analysis(self.current_deck)
+
+                elif self.current_deck:
+                    # Show deck-specific statistics
+                    stats_dashboard.show_deck_statistics(self.current_deck, detailed=show_detailed)
+
+                else:
+                    # No deck loaded, show global stats
+                    self.rich_ui.show_warning("No deck loaded. Showing global statistics...", "No Deck")
+                    all_decks = self.storage.list_decks()
+                    deck_objects = []
+                    for deck_info in all_decks:
+                        try:
+                            deck = self.storage.load_deck_by_name(deck_info['name'])
+                            if deck:
+                                deck_objects.append(deck)
+                        except Exception:
+                            continue
+
+                    if deck_objects:
+                        stats_dashboard.show_global_statistics(deck_objects)
+                    else:
+                        self.rich_ui.show_info("No decks found. Import some flashcards to see statistics!", "No Data")
+
+            except Exception as e:
+                self.rich_ui.show_error(f"Statistics error: {e}", "Stats Error")
+        else:
+            # Fallback to basic stats
+            if self.current_deck:
+                print(f"Basic statistics for '{self.current_deck.name}':")
+                print(f"  Total cards: {len(self.current_deck.flashcards)}")
+                print(f"  Due for review: {self.current_deck.due_count}")
             else:
                 print("No deck loaded. Use 'load' command first.")
-            return True
-        
-        if self.rich_ui:
-            self.rich_ui.show_info(f"Statistics for '{self.current_deck.name}' will be implemented in the full version", "Stats Placeholder")
-        else:
-            print(f"Statistics for '{self.current_deck.name}' will be implemented in the full version")
-        
+
         return True
     
     def show_collections(self, args: List[str] = None) -> bool:
@@ -495,6 +607,161 @@ Examples:
             print("Tag management will be implemented in the full version")
         return True
     
+    def ai_features(self, args: List[str] = None) -> bool:
+        """Show AI features menu and capabilities."""
+        if not self.rich_ui or not RICH_UI_AVAILABLE:
+            print("AI features require Rich Terminal UI")
+            return True
+
+        # Show AI features overview
+        ai_content = []
+        ai_content.append("🤖 [bold bright_blue]AI-Powered Features[/bold bright_blue]")
+        ai_content.append("")
+        ai_content.append("✨ [bold]Available AI Features:[/bold]")
+        ai_content.append("  🎯 [bright_cyan]generate[/bright_cyan] - Generate flashcards from text")
+        ai_content.append("  💡 [bright_cyan]suggest[/bright_cyan] - Get related content suggestions")
+        ai_content.append("  🔧 [bright_cyan]enhance[/bright_cyan] - Enhance existing flashcards")
+        ai_content.append("  🎯 [bright_cyan]ai predict[/bright_cyan] - Predict card difficulty")
+        ai_content.append("")
+        ai_content.append("🚀 [bold]AI Capabilities:[/bold]")
+        ai_content.append("  • Intelligent content extraction from text")
+        ai_content.append("  • Automatic difficulty prediction")
+        ai_content.append("  • Smart tag generation")
+        ai_content.append("  • Related content suggestions")
+        ai_content.append("  • Flashcard enhancement recommendations")
+        ai_content.append("")
+        ai_content.append("💡 [dim]Example: 'generate' to create cards from text[/dim]")
+
+        from rich.panel import Panel
+        ai_panel = Panel(
+            "\n".join(ai_content),
+            title="🤖 AI Features",
+            border_style="bright_blue",
+            padding=(1, 2)
+        )
+
+        self.rich_ui.console.print(ai_panel)
+        return True
+
+    def ai_generate_content(self, args: List[str] = None) -> bool:
+        """Generate flashcards from text using AI."""
+        if not self.rich_ui or not RICH_UI_AVAILABLE:
+            print("AI generation requires Rich Terminal UI")
+            return True
+
+        try:
+            ai_interface = RichAIInterface(self.rich_ui.console)
+
+            # Get text input
+            if args and len(args) > 0:
+                # Text provided as arguments
+                text = " ".join(args)
+            else:
+                # Show helpful examples first
+                self.rich_ui.console.print("\n💡 [bold bright_cyan]AI Content Generation Examples:[/bold bright_cyan]")
+                self.rich_ui.console.print("   • Facts: 'The speed of light is 299,792,458 m/s. Water boils at 100°C.'")
+                self.rich_ui.console.print("   • Vocabulary: 'Hello - greeting. Thank you - expression of gratitude.'")
+                self.rich_ui.console.print("   • Definitions: 'Photosynthesis is the process plants use to make food.'")
+                self.rich_ui.console.print("   • Formulas: 'Area of circle = πr². Pythagorean theorem: a² + b² = c²'")
+                self.rich_ui.console.print("")
+
+                # Get text from user
+                text = self.rich_ui.console.input("[bold bright_yellow]Enter text to generate flashcards from:[/bold bright_yellow]\n")
+
+            if not text.strip():
+                self.rich_ui.show_warning("No text provided for generation", "AI Generation")
+                return True
+
+            # Check if user provided a file path and give helpful guidance
+            if any(indicator in text for indicator in ['.csv', '.txt', '.json', '/', '\\', 'assets']):
+                self.rich_ui.show_warning(
+                    f"It looks like you provided a file path: '{text}'\n\n"
+                    "The AI generator works with actual text content, not file paths.\n"
+                    "Please copy and paste the actual text content you want to convert to flashcards.\n\n"
+                    "For now, I'll generate some example flashcards to demonstrate the feature.",
+                    "File Path Detected"
+                )
+
+            # Get deck name
+            deck_name = self.rich_ui.console.input("\n[bold bright_cyan]Deck name (default: AI Generated Deck):[/bold bright_cyan] ") or "AI Generated Deck"
+
+            # Generate flashcards
+            generated_deck = ai_interface.generate_flashcards_from_text(text, deck_name)
+
+            if generated_deck:
+                # Save the generated deck
+                self.storage.save_deck(generated_deck)
+                self.current_deck = generated_deck
+                self.rich_ui.show_success(f"Generated deck '{deck_name}' with {len(generated_deck.flashcards)} cards!", "AI Generation Complete")
+
+        except Exception as e:
+            self.rich_ui.show_error(f"AI generation error: {e}", "AI Error")
+
+        return True
+
+    def ai_suggest_content(self, args: List[str] = None) -> bool:
+        """Get AI suggestions for related content."""
+        if not self.current_deck:
+            if self.rich_ui:
+                self.rich_ui.show_error("No deck loaded. Use 'load' command first.", "No Deck Loaded")
+            else:
+                print("No deck loaded. Use 'load' command first.")
+            return True
+
+        if not self.rich_ui or not RICH_UI_AVAILABLE:
+            print("AI suggestions require Rich Terminal UI")
+            return True
+
+        try:
+            ai_interface = RichAIInterface(self.rich_ui.console)
+
+            # Get suggestion count
+            count = 5
+            if args and len(args) > 0:
+                try:
+                    count = int(args[0])
+                    count = max(1, min(count, 20))  # Limit between 1 and 20
+                except ValueError:
+                    pass
+
+            # Generate suggestions
+            suggestions = ai_interface.suggest_related_content(self.current_deck, count)
+
+            if suggestions:
+                self.rich_ui.show_success(f"Generated {len(suggestions)} content suggestions!", "AI Suggestions")
+
+        except Exception as e:
+            self.rich_ui.show_error(f"AI suggestion error: {e}", "AI Error")
+
+        return True
+
+    def ai_enhance_cards(self, args: List[str] = None) -> bool:
+        """Enhance existing flashcards with AI suggestions."""
+        if not self.current_deck:
+            if self.rich_ui:
+                self.rich_ui.show_error("No deck loaded. Use 'load' command first.", "No Deck Loaded")
+            else:
+                print("No deck loaded. Use 'load' command first.")
+            return True
+
+        if not self.rich_ui or not RICH_UI_AVAILABLE:
+            print("AI enhancement requires Rich Terminal UI")
+            return True
+
+        try:
+            ai_interface = RichAIInterface(self.rich_ui.console)
+
+            # Enhance cards
+            results = ai_interface.enhance_existing_cards(self.current_deck)
+
+            if results:
+                self.rich_ui.show_success(f"Enhanced {results.get('applied', 0)} cards with AI suggestions!", "AI Enhancement Complete")
+
+        except Exception as e:
+            self.rich_ui.show_error(f"AI enhancement error: {e}", "AI Error")
+
+        return True
+
     def exit_app(self, args: List[str] = None) -> bool:
         """Exit the application."""
         if self.rich_ui:

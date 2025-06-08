@@ -6,19 +6,21 @@ flashcards with their content, metadata, and spaced repetition data.
 """
 
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Union
 from dataclasses import dataclass, field
 import uuid
+import re
 
 
 @dataclass
 class Flashcard:
     """
-    Represents a single flashcard with question, answer, and spaced repetition data.
-    
+    Represents a single flashcard with question, answer(s), and spaced repetition data.
+
     Attributes:
         question: The question or prompt text
-        answer: The correct answer text
+        answer: The primary correct answer text (for backward compatibility)
+        valid_answers: List of all valid answers (including the primary answer)
         card_id: Unique identifier for the card
         created_at: When the card was created
         last_reviewed: When the card was last reviewed
@@ -32,7 +34,7 @@ class Flashcard:
     """
     
     question: str
-    answer: str
+    answer: str  # Primary answer for backward compatibility
     card_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = field(default_factory=datetime.now)
     last_reviewed: Optional[datetime] = None
@@ -43,6 +45,9 @@ class Flashcard:
     correct_count: int = 0
     tags: list[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
+
+    # Multiple valid answers support
+    valid_answers: List[str] = field(default_factory=list)
 
     # Enhanced difficulty tracking
     response_times: List[float] = field(default_factory=list)
@@ -60,6 +65,13 @@ class Flashcard:
             raise ValueError("Difficulty must be between 0.0 and 1.0")
         if self.ease_factor < 1.3:
             self.ease_factor = 1.3  # Minimum ease factor
+
+        # Initialize valid_answers if empty (for backward compatibility)
+        if not self.valid_answers:
+            self.valid_answers = [self.answer]
+        elif self.answer not in self.valid_answers:
+            # Ensure primary answer is always in valid_answers
+            self.valid_answers.insert(0, self.answer)
     
     @property
     def accuracy(self) -> float:
@@ -122,6 +134,110 @@ class Flashcard:
             interval_days = 1  # Review again tomorrow if incorrect
 
         self.next_review = datetime.now() + timedelta(days=interval_days)
+
+    def add_valid_answer(self, answer: str) -> None:
+        """
+        Add a new valid answer to this flashcard.
+
+        Args:
+            answer: The new valid answer to add
+        """
+        answer = answer.strip()
+        if answer and answer not in self.valid_answers:
+            self.valid_answers.append(answer)
+
+    def remove_valid_answer(self, answer: str) -> bool:
+        """
+        Remove a valid answer from this flashcard.
+
+        Args:
+            answer: The answer to remove
+
+        Returns:
+            True if the answer was removed, False if it wasn't found
+        """
+        if answer in self.valid_answers:
+            # Don't allow removing the primary answer if it's the only one
+            if len(self.valid_answers) == 1 and answer == self.answer:
+                return False
+
+            self.valid_answers.remove(answer)
+
+            # If we removed the primary answer, make the first valid answer the new primary
+            if answer == self.answer and self.valid_answers:
+                self.answer = self.valid_answers[0]
+
+            return True
+        return False
+
+    def set_valid_answers(self, answers: List[str]) -> None:
+        """
+        Set all valid answers for this flashcard.
+
+        Args:
+            answers: List of valid answers
+        """
+        # Filter out empty answers and remove duplicates while preserving order
+        valid_answers = []
+        seen = set()
+        for answer in answers:
+            answer = answer.strip()
+            if answer and answer not in seen:
+                valid_answers.append(answer)
+                seen.add(answer)
+
+        if not valid_answers:
+            raise ValueError("At least one valid answer is required")
+
+        self.valid_answers = valid_answers
+        # Set the first answer as the primary answer
+        self.answer = valid_answers[0]
+
+    def is_answer_correct(self, user_answer: str, case_sensitive: bool = False) -> bool:
+        """
+        Check if a user's answer matches any of the valid answers.
+
+        Args:
+            user_answer: The user's answer to check
+            case_sensitive: Whether to perform case-sensitive matching
+
+        Returns:
+            True if the answer matches any valid answer, False otherwise
+        """
+        user_answer = user_answer.strip()
+
+        for valid_answer in self.valid_answers:
+            if case_sensitive:
+                if user_answer == valid_answer:
+                    return True
+            else:
+                if user_answer.lower() == valid_answer.lower():
+                    return True
+
+        return False
+
+    def get_matching_answer(self, user_answer: str, case_sensitive: bool = False) -> Optional[str]:
+        """
+        Get the valid answer that matches the user's input.
+
+        Args:
+            user_answer: The user's answer to check
+            case_sensitive: Whether to perform case-sensitive matching
+
+        Returns:
+            The matching valid answer, or None if no match found
+        """
+        user_answer = user_answer.strip()
+
+        for valid_answer in self.valid_answers:
+            if case_sensitive:
+                if user_answer == valid_answer:
+                    return valid_answer
+            else:
+                if user_answer.lower() == valid_answer.lower():
+                    return valid_answer
+
+        return None
 
     def update_difficulty(self, new_difficulty: float, reason: str = "") -> None:
         """
@@ -192,6 +308,7 @@ class Flashcard:
             "card_id": self.card_id,
             "question": self.question,
             "answer": self.answer,
+            "valid_answers": self.valid_answers,
             "created_at": self.created_at.isoformat(),
             "last_reviewed": self.last_reviewed.isoformat() if self.last_reviewed else None,
             "next_review": self.next_review.isoformat(),
@@ -241,6 +358,9 @@ class Flashcard:
         card.confidence_ratings = data.get("confidence_ratings", [])
         card.difficulty_history = data.get("difficulty_history", [])
         card.last_difficulty_update = last_difficulty_update
+
+        # Set valid answers (with backward compatibility)
+        card.valid_answers = data.get("valid_answers", [data["answer"]])
 
         return card
     

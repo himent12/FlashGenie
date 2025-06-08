@@ -1,10 +1,10 @@
-# 🧞‍♂️ FlashGenie Documentation
+# 🧞‍♂️ FlashGenie v1.8.5 Documentation
 
-Welcome to the comprehensive documentation for **FlashGenie v1.8.4** - the intelligent flashcard application with Rich Terminal UI and enhanced interactive shell that revolutionizes learning through adaptive spaced repetition, smart difficulty adjustment, and advanced organization features.
+Welcome to the comprehensive documentation for **FlashGenie v1.8.5** - the ultimate flashcard learning system with beautiful Rich Terminal UI, comprehensive analytics, and intelligent AI-powered content generation that revolutionizes learning through adaptive spaced repetition, smart difficulty adjustment, and advanced AI features.
 
 ## 🚀 **What is FlashGenie?**
 
-FlashGenie is more than just a flashcard app. It's an intelligent learning platform that adapts to your unique learning patterns, helping you master any subject more efficiently than traditional study methods.
+FlashGenie v1.8.5 is the most advanced flashcard learning system available. It's an intelligent learning platform that combines beautiful Rich Terminal UI, comprehensive analytics, and AI-powered content generation to adapt to your unique learning patterns, helping you master any subject more efficiently than ever before.
 
 ### ✨ **Key Features**
 
@@ -30,19 +30,47 @@ FlashGenie is more than just a flashcard app. It's an intelligent learning platf
     **Smart Collections**
     : Dynamic card grouping by difficulty, performance, tags, and timing
 
-=== "💻 Rich Terminal UI (v1.8.4)"
+=== "🎮 Rich Quiz Interface (v1.8.5 Phase 1)"
 
-    **Rich Interactive Shell**
-    : Beautiful Rich Terminal UI in both standalone and interactive modes
+    **Beautiful Quiz Sessions**
+    : Interactive quiz experience with Rich Terminal UI formatting
 
-    **Enhanced Accessibility**
-    : Screen reader support, high contrast, and keyboard navigation
+    **Multiple Quiz Modes**
+    : Spaced repetition, random, sequential, and difficult-first modes
 
-    **Comprehensive Help System**
-    : Searchable command reference with contextual assistance
+    **Real-time Progress Tracking**
+    : Visual progress bars and completion indicators
 
-    **Developer Tools**
-    : Rich debug console and performance monitoring
+    **Confidence Assessment**
+    : User confidence rating system with adaptive difficulty
+
+=== "📊 Rich Statistics Dashboard (v1.8.5 Phase 2)"
+
+    **Comprehensive Analytics**
+    : Detailed learning insights with Rich data visualization
+
+    **Global Statistics**
+    : Cross-deck analytics and library overview
+
+    **Learning Trends**
+    : Progress tracking over time with predictions
+
+    **Performance Analysis**
+    : Response times, accuracy, and improvement areas
+
+=== "🤖 AI Content Generation (v1.8.5 Phase 3)"
+
+    **AI-Powered Generation**
+    : Intelligent flashcard creation from text
+
+    **Smart Difficulty Prediction**
+    : AI assessment of card complexity
+
+    **Content Suggestions**
+    : Related topic generation based on existing cards
+
+    **Automatic Enhancement**
+    : AI recommendations for improving existing flashcards
 
 ## 🎯 **Quick Navigation**
 
@@ -88,13 +116,29 @@ FlashGenie is more than just a flashcard app. It's an intelligent learning platf
 
     [:octicons-arrow-right-24: Plugin Guide](plugins/README.md)
 
--   :material-palette: **Rich Terminal UI (v1.8.4)**
+-   :material-gamepad-variant: **Rich Quiz Interface (v1.8.5)**
 
     ---
 
-    Beautiful Rich Terminal UI with enhanced interactive shell and comprehensive help.
+    Beautiful, interactive quiz sessions with Rich Terminal UI and multiple modes.
 
-    [:octicons-arrow-right-24: Rich UI Guide](v1.8.4-rich-interactive-shell.md)
+    [:octicons-arrow-right-24: Rich Quiz Guide](v1.8.5-rich-quiz-interface.md)
+
+-   :material-chart-line: **Rich Statistics Dashboard (v1.8.5)**
+
+    ---
+
+    Comprehensive learning analytics with Rich data visualization and insights.
+
+    [:octicons-arrow-right-24: Statistics Guide](v1.8.5-statistics-dashboard.md)
+
+-   :material-robot: **AI Content Generation (v1.8.5)**
+
+    ---
+
+    Intelligent flashcard creation and enhancement with AI-powered features.
+
+    [:octicons-arrow-right-24: AI Features Guide](v1.8.5-ai-content-generation.md)
 
 </div>
 
@@ -127,18 +171,24 @@ FlashGenie is more than just a flashcard app. It's an intelligent learning platf
 
 ### Your First Smart Study Session
 
-=== "Rich Interactive Shell (v1.8.4)"
+=== "Rich Interactive Shell (v1.8.5)"
 
     ```bash
-    # Start the beautiful Rich interactive shell
+    # Start the beautiful Rich interactive shell with AI features
     python -m flashgenie
 
     # All commands now use Rich Terminal UI!
     FlashGenie > help                    # Rich help system
     FlashGenie > import my_flashcards.csv --name "My Study Deck"
     FlashGenie > list                    # Rich deck tables
-    FlashGenie > quiz "My Study Deck"    # Start learning
-    FlashGenie > stats                   # Rich analytics
+
+    # v1.8.5 New Features:
+    FlashGenie > quiz                    # Rich quiz interface
+    FlashGenie > stats --detailed        # Rich statistics dashboard
+    FlashGenie > ai                      # AI features overview
+    FlashGenie > generate                # AI flashcard generation
+    FlashGenie > suggest                 # AI content suggestions
+    FlashGenie > enhance                 # AI card enhancement
     ```
 
 === "Standalone Commands"
@@ -265,12 +315,13 @@ python -m flashgenie stats
 
 ## 🗺️ **What's Next?**
 
-FlashGenie is actively developed with exciting features planned:
+FlashGenie v1.8.5 delivers revolutionary AI-powered learning! Future development includes:
 
+- **Real AI Model Integration**: GPT, Claude, or other AI model integration
 - **GUI Interface**: Modern desktop application with visual analytics
-- **Web Version**: Browser-based interface with real-time sync  
+- **Web Version**: Browser-based interface with real-time sync
 - **Mobile Apps**: iOS and Android with offline capability
-- **Advanced AI**: Machine learning for content generation and analysis
+- **Advanced AI Features**: Personalized learning paths and recommendations
 - **Collaboration**: Share decks and study with others
 
 ---

@@ -1,11 +1,17 @@
-# 🧞‍♂️ FlashGenie v1.8.4 - Complete Command Reference
+# 🧞‍♂️ FlashGenie v1.8.5 - Complete Command Reference
 
-**Comprehensive guide to all FlashGenie commands with Rich Terminal UI**
+**Comprehensive guide to all FlashGenie commands with Rich Terminal UI and AI Features**
 
-This document provides detailed information about every command available in FlashGenie v1.8.4, including syntax, parameters, examples, and expected output with the Rich Terminal Interface and Enhanced Interactive Shell.
+This document provides detailed information about every command available in FlashGenie v1.8.5, including syntax, parameters, examples, and expected output with the Rich Terminal Interface, Rich Quiz Interface, Rich Statistics Dashboard, and AI Content Generation features.
 
 ## 📋 **Table of Contents**
 
+### 🌟 **v1.8.5 New Features**
+- [🎮 Rich Quiz Interface](#-rich-quiz-interface-v185-phase-1)
+- [📊 Rich Statistics Dashboard](#-rich-statistics-dashboard-v185-phase-2)
+- [🤖 AI Content Generation](#-ai-content-generation-v185-phase-3)
+
+### 📚 **Core Commands**
 - [🔰 Basic Commands](#-basic-commands)
 - [📚 Deck Management](#-deck-management)
 - [📁 Import/Export](#-importexport)
@@ -15,6 +21,128 @@ This document provides detailed information about every command available in Fla
 - [🔧 Developer Tools](#-developer-tools)
 - [⚡ Performance](#-performance)
 - [🔍 Search & Help](#-search--help)
+
+---
+
+## 🌟 **FlashGenie v1.8.5 New Features**
+
+### 🎮 **Rich Quiz Interface (v1.8.5 Phase 1)**
+
+Beautiful, interactive quiz sessions with Rich Terminal UI formatting and enhanced user experience.
+
+#### **`quiz` - Start Rich Quiz Session**
+
+**Interactive Shell:**
+```bash
+FlashGenie > quiz                    # Start quiz with current deck
+FlashGenie > quiz spaced             # Spaced repetition mode
+FlashGenie > quiz random             # Random order mode
+FlashGenie > quiz sequential         # Sequential order mode
+FlashGenie > quiz difficult          # Difficult cards first
+FlashGenie > quiz timed              # Timed quiz mode
+FlashGenie > quiz 10                 # Quiz with 10 cards
+```
+
+**Standalone:**
+```bash
+python -m flashgenie quiz "Deck Name"
+python -m flashgenie quiz "Deck Name" 20
+python -m flashgenie quiz "Deck Name" timed
+```
+
+**Features:**
+- Beautiful Rich Terminal UI throughout quiz experience
+- Interactive question display with progress tracking
+- Multiple quiz modes for different learning approaches
+- Real-time feedback with Rich panels and formatting
+- Confidence tracking and adaptive difficulty adjustment
+
+### 📊 **Rich Statistics Dashboard (v1.8.5 Phase 2)**
+
+Comprehensive learning analytics with Rich data visualization and detailed insights.
+
+#### **`stats` - Rich Statistics Dashboard**
+
+**Interactive Shell:**
+```bash
+FlashGenie > stats                   # Simple overview
+FlashGenie > stats --detailed        # Detailed analysis
+FlashGenie > stats --global          # Global statistics
+FlashGenie > stats --trends          # Learning trends
+FlashGenie > stats --performance     # Performance analysis
+```
+
+**Standalone:**
+```bash
+python -m flashgenie stats "Deck Name"
+python -m flashgenie stats "Deck Name" --detailed
+python -m flashgenie stats --global
+```
+
+**Features:**
+- Comprehensive deck analytics with Rich formatting
+- Global statistics across all decks
+- Learning trends and progress tracking with predictions
+- Performance analysis with actionable insights
+- Visual charts and data visualization
+
+### 🤖 **AI Content Generation (v1.8.5 Phase 3)**
+
+Intelligent flashcard creation and enhancement with AI-powered features.
+
+#### **`ai` - AI Features Overview**
+
+**Interactive Shell:**
+```bash
+FlashGenie > ai                      # Show AI capabilities
+```
+
+**Features:**
+- Overview of all AI-powered features
+- Capabilities explanation and usage guidance
+- Beautiful Rich UI presentation of AI features
+
+#### **`generate` - AI Flashcard Generation**
+
+**Interactive Shell:**
+```bash
+FlashGenie > generate                # Generate flashcards from text
+```
+
+**Features:**
+- AI-powered flashcard generation from text
+- Multiple content types (vocabulary, definitions, facts, formulas)
+- Intelligent difficulty prediction
+- Automatic tag generation and categorization
+- Interactive content review and approval workflow
+
+#### **`suggest` - AI Content Suggestions**
+
+**Interactive Shell:**
+```bash
+FlashGenie > suggest                 # Get content suggestions (5 default)
+FlashGenie > suggest 10              # Get 10 content suggestions
+```
+
+**Features:**
+- Smart content suggestions based on existing cards
+- Related topic generation and expansion
+- Difficulty-matched suggestions
+- Tag-consistent recommendations
+
+#### **`enhance` - AI Card Enhancement**
+
+**Interactive Shell:**
+```bash
+FlashGenie > enhance                 # Enhance existing flashcards
+```
+
+**Features:**
+- AI recommendations for improving existing flashcards
+- Question wording improvements
+- Additional context suggestions
+- Better tag recommendations
+- Quality enhancement analysis
 
 ---
 
